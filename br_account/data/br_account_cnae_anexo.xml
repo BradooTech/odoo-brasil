@@ -1,0 +1,28 @@
+<odoo>
+    <!--Para carregar dados externos, deve-se criar um record para cada campo e
+    referenciar a tabela que o utilizará. Este tbm, deverá ser mapeado pelo manifest
+     passando o seu nome(br_account_cnae_anexo.xml) para o data.-->
+	<data noupdate="1">
+
+        <record id="anexo1" model="br_account.cnae.anexo">
+            <field name="name">Anexo I</field>
+        </record>
+
+        <record id="anexo2" model="br_account.cnae.anexo">
+            <field name="name">Anexo II</field>
+        </record>
+
+        <record id="anexo3" model="br_account.cnae.anexo">
+            <field name="name">Anexo III</field>
+        </record>
+
+        <record id="anexo4" model="br_account.cnae.anexo">
+            <field name="name">Anexo IV</field>
+        </record>
+
+        <record id="anexo5" model="br_account.cnae.anexo">
+            <field name="name">Anexo V</field>
+        </record>
+
+    </data>
+</odoo>
