@@ -140,6 +140,10 @@ class BrAccountDocumentSerie(models.Model):
             vals.update({'internal_sequence_id': self._create_sequence(vals)})
         return super(BrAccountDocumentSerie, self).create(vals)
 
+# Criação da classe anexo
+class BrAccountCnaeAnexo(models.Model):
+    _name = 'br_account.cnae.anexo'
+    name = fields.Char(u'Nome', required=True)
 
 class BrAccountCNAE(models.Model):
     _name = 'br_account.cnae'
@@ -154,6 +158,8 @@ class BrAccountCNAE(models.Model):
     internal_type = fields.Selection(
         [('view', u'Visualização'), ('normal', 'Normal')],
         'Tipo Interno', required=True, default='normal')
+    # cria a relação com classe br_account.cnae.anexo
+    anexos = fields.Many2many('br_account.cnae.anexo', string="Anexos")
 
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):

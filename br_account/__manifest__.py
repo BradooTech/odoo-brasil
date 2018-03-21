@@ -17,6 +17,7 @@
         'account', 'br_base', 'account_cancel'
     ],
     'data': [
+        'data/br_account_cnae_anexo.xml',
         'views/account_fiscal_position_view.xml',
         'views/account_invoice_view.xml',
         'views/account.xml',
