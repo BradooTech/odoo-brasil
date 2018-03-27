@@ -411,12 +411,12 @@ class AccountInvoice(models.Model):
     def action_invoice_open(self):
         res = super(AccountInvoice, self).action_invoice_open()
 
-        if self.fiscal_document_id.code in ['001','002','003','004','005','006','007']:
+        if self.service_document_id.code in ['001','002','003','004','005','006','007','991']:
             validation = self.env['ir.module.module'].search([("name", "=", "br_nfse")])
             if validation.state != 'installed':
                 raise UserError (u"Módulo de Envio de NFS-e não instalado. \
                     Por favor contate o Adminstrador!")
-        elif self.fiscal_document_id.code in ['55','65']:
+        elif self.product_document_id.code in ['55','65']:
             validation = self.env['ir.module.module'].search([("name", "=", "br_nfe")])
             if validation.state != 'installed':
                 raise UserError (u"Módulo de Envio de NF-e não instalado. \
