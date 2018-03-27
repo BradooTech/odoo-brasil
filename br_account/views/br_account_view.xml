@@ -111,6 +111,8 @@
                         <field name="parent_id"/>
                         <!-- Adição do campo para os anexos serem exibidos como tags -->
                         <field name="anexos" widget="many2many_tags" String="Anexos" options="{'no_create_edit': True}" />
+                        <field name="simples"/>
+                        <field name="fator"/>
                     </group>
                 </sheet>
             </form>
@@ -127,6 +129,8 @@
                 <field name="version" select="1"/>
                 <field name="parent_id" select="1"/>
                 <field name="anexos" string="Anexos"/>
+                <field name="simples"/>
+                <field name="fator"/>
             </tree>
         </field>
     </record>

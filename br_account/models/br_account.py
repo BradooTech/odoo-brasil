@@ -160,6 +160,8 @@ class BrAccountCNAE(models.Model):
         'Tipo Interno', required=True, default='normal')
     # cria a relação com classe br_account.cnae.anexo
     anexos = fields.Many2many('br_account.cnae.anexo', string="Anexos")
+    simples = fields.Boolean(u'É Simples?', required=True)
+    fator = fields.Boolean(u'Fator R?', required=True)
 
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):
