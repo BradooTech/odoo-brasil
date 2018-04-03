@@ -455,7 +455,10 @@ class InvoiceEletronic(models.Model):
         mail = self.env.user.company_id.nfe_email_template
         if not mail:
             raise UserError('Modelo de email padrão não configurado')
+        print('passei aqui\n\n')
         atts = self._find_attachment_ids_email()
+        if atts == None : atts = []
+        print(atts)
         values = {
             "attachment_ids": atts + mail.attachment_ids.ids
         }
