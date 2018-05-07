@@ -178,8 +178,8 @@ class Cnab240(Cnab):
             'data_emissao_titulo': self.format_date(
                 line.date),
             # Taxa de juros do Odoo padrão mensal: 2. Campo 27.3P
-            # CEF/FEBRABAN e Itaú não tem.
-            'codigo_juros': 2,
+            # CEF/FEBRABAN e Itaú não tem. ##Bradoo -> Incluida opcao 3 caso o valor esteja zerado (ISENTO)
+            'codigo_juros': 2 if Decimal(str(self.order.payment_mode_id.late_payment_fee)).quantize(Decimal('1.00'))>0 else 3,
             'juros_mora_data': self.format_date(
                 line.date_maturity),
             'juros_mora_taxa':  Decimal(
