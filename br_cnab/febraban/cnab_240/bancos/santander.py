@@ -33,7 +33,19 @@ class Santander240(Cnab240):
         vals['forma_cadastramento'] = 1
         vals['codigo_multa'] = int(vals['codigo_multa'])
         vals['codigo_juros'] = int(vals['codigo_juros'])
+        
         vals['juros_mora_taxa'] = vals['juros_mora_taxa'] * Decimal('1000')
+        
+        #Bradoo - Se a taxa de juros = 0 codigo deve ser 3 = sem juros e data com zeros
+        if int(vals['juros_mora_taxa']) == 0 :
+            vals['codigo_juros'] = 3
+            vals['juros_mora_data'] = 0
+		
+        #Bradoo - Se a multa = 0 codigo deve ser 3 = sem juros e data com zeros
+        if Decimal(str(vals['juros_multa'])).quantize(Decimal('1.00')) ==0 :
+            vals['codigo_multa'] = 0
+            vals['data_multa'] = 0
+					
         # Data da multa fica zerado, dai ele considera data de vencimento
         vals['data_multa'] = 0
         # tipo documento : 1- Tradicional , 2- Escritural
