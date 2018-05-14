@@ -49,7 +49,6 @@ class AccountBankStatementImport(models.TransientModel):
 
             bank = self.get_bank(journal_id)
             Arquivo(bank, arquivo=open(cnab240_file.name, 'r'))
-            print('\nPassei pelo check do cnab')
             return True
         except Exception as e:
             if raise_error:
@@ -140,8 +139,6 @@ class AccountBankStatementImport(models.TransientModel):
                 # Liquidação Banco do Brasil (6, 17)
                 # Liquidação Bradesco (6, 177)
                 # Liquidação Santander ('06', '17')
-
-                print('\n   Evento->nosso numero\n',evento.nosso_numero)
 
                 if evento.servico_codigo_movimento in (6, 17, '06', '17',):
                     valor_total += valor
