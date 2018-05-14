@@ -49,6 +49,7 @@ class AccountBankStatementImport(models.TransientModel):
 
             bank = self.get_bank(journal_id)
             Arquivo(bank, arquivo=open(cnab240_file.name, 'r'))
+            print('\nPassei pelo check do cnab')
             return True
         except Exception as e:
             if raise_error:
@@ -57,6 +58,8 @@ class AccountBankStatementImport(models.TransientModel):
 
     def _get_nosso_numero(self, journal_id, nosso_numero):
         # TODO Quando outros bancos modificar aqui
+
+        nosso_numero = str(nosso_numero)
         bank = self.env['account.journal'].browse(journal_id).bank_id.bic
         if bank == '237':  # Bradesco
             return int(nosso_numero[8:19])
@@ -94,13 +97,29 @@ class AccountBankStatementImport(models.TransientModel):
             from cnab240.bancos import sicredi
             return sicredi
         else:
-            raise UserError(u'Banco ainda não implementado: %s' % bank)
+            if self.force_journal_account:
+                raise Exception(u'Banco ainda não implementado: %s' % bank)
+            else :
+                raise Exception(u'Para conciliar o CNAB de cobrança, é necessário selecionar a conta bancária (Forçar conta bancária)')
+
+    #localiza agencia e conta no arquivo CNAB
+    def get_account(self, journal_id, codigo):
+        codigo = str(codigo)
+        bank = self.env['account.journal'].browse(journal_id).bank_id.bic
+        if bank == '033':
+            try:
+                cc = int(codigo[5:])
+                return codigo[:4] + str(cc)
+            except Exception as ex :
+                raise UserError(ex)
+        else:
+            return None
 
     def _parse_cnab(self, data_file, raise_error=False):
         cnab240_file = tempfile.NamedTemporaryFile()
         cnab240_file.write(data_file)
         cnab240_file.flush()
-
+        
         journal_id = self.env.context['journal_id']
         if self.force_journal_account:
             journal_id = self.journal_id.id
@@ -109,6 +128,11 @@ class AccountBankStatementImport(models.TransientModel):
         arquivo = Arquivo(bank, arquivo=open(cnab240_file.name, 'r'))
         transacoes = []
         valor_total = Decimal('0.0')
+        
+        conta_cnab = self.get_account(journal_id,arquivo.header.codigo_transmissao)
+        
+        #arquivo = arquivo.carregar_retorno(arquivo)
+                
         for lote in arquivo.lotes:
             for evento in lote.eventos:
                 valor = evento.valor_lancamento
@@ -116,6 +140,9 @@ class AccountBankStatementImport(models.TransientModel):
                 # Liquidação Banco do Brasil (6, 17)
                 # Liquidação Bradesco (6, 177)
                 # Liquidação Santander ('06', '17')
+
+                print('\n   Evento->nosso numero\n',evento.nosso_numero)
+
                 if evento.servico_codigo_movimento in (6, 17, '06', '17',):
                     valor_total += valor
 
@@ -163,9 +190,13 @@ class AccountBankStatementImport(models.TransientModel):
             'balance_end_real': Decimal(last_balance) + valor_total,
             'transactions': transacoes
         }
+
         account_number = ''  # str(arquivo.header.cedente_conta)
         if self.force_journal_account:
-            account_number = self.journal_id.bank_acc_number
+            if conta_cnab == None :
+                account_number = str(self.journal_id.bank_account_id.sanitized_acc_number)
+            else :
+                account_number = conta_cnab
         return (
             'BRL',
             account_number,
