@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# © 2016 Danimar Ribeiro, Trustcode
+# 2016 Danimar Ribeiro, Trustcode
+# 2018 - Renato Sabo, Bradoo - <renato.sabo@bradootech.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import logging
@@ -104,7 +105,8 @@ class AccountBankStatementImport(models.TransientModel):
     #localiza agencia e conta no arquivo CNAB
     def get_account(self, journal_id, codigo):
         codigo = str(codigo)
-        bank = self.env['account.journal'].browse(journal_id).bank_id.bic
+        j =  self.env['account.journal'].browse(journal_id)
+        bank = j.bank_id.bic
         if bank == '033':
             try:
                 cc = int(codigo[5:])
@@ -129,8 +131,11 @@ class AccountBankStatementImport(models.TransientModel):
         valor_total = Decimal('0.0')
         
         conta_cnab = self.get_account(journal_id,arquivo.header.codigo_transmissao)
-        
-        #arquivo = arquivo.carregar_retorno(arquivo)
+        conta_diario = self.journal_id.bank_account_id.sanitized_acc_number
+
+        if not conta_diario == False :   
+            if not conta_cnab ==  conta_diario :
+                raise UserError('A conta do arquivo(' + str(conta_cnab) + ') não corresponde a conta informada (' + str(conta_diario) + ')'  )
                 
         for lote in arquivo.lotes:
             for evento in lote.eventos:
@@ -187,15 +192,9 @@ class AccountBankStatementImport(models.TransientModel):
             'balance_end_real': Decimal(last_balance) + valor_total,
             'transactions': transacoes
         }
-
-        account_number = ''  # str(arquivo.header.cedente_conta)
-        if self.force_journal_account:
-            if conta_cnab == None :
-                account_number = str(self.journal_id.bank_account_id.sanitized_acc_number)
-            else :
-                account_number = conta_cnab
+        
         return (
             'BRL',
-            account_number,
+            conta_cnab,
             [vals_bank_statement]
         )
