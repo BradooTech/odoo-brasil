@@ -35,6 +35,16 @@ class InvoiceEletronicItem(models.Model):
 class InvoiceEletronic(models.Model):
     _inherit = 'invoice.eletronic'
 
+    @api.multi
+    def _compute_discriminacao(self):
+        for item in self:
+            descricao = ''
+            for eletronic_item in item.eletronic_item_ids:
+                descricao += eletronic_item.name + '<br/>'
+            if item.informacoes_legais:
+                descricao += item.informacoes_legais + '<br/>'
+            item.discriminacao_servicos = descricao
+
     operation = fields.Selection(
         [('T', u"Tributado em São Paulo"),
          ('F', u"Tributado Fora de São Paulo"),
@@ -51,6 +61,8 @@ class InvoiceEletronic(models.Model):
         string=u'Código Autorização', size=20, readonly=True, states=STATE)
     numero_nfse = fields.Char(
         string=u"Número NFSe", size=50, readonly=True, states=STATE)
+
+    discriminacao_servicos = fields.Char(compute='_compute_discriminacao')
 
     def issqn_due_date(self):
         date_emition = datetime.strptime(self.data_emissao, DTFT)
@@ -109,7 +121,7 @@ class InvoiceEletronic(models.Model):
                 'tipo_cpfcnpj': 2 if partner.is_company else 1,
                 'cpf_cnpj': re.sub('[^0-9]', '',
                                    partner.cnpj_cpf or ''),
-                'razao_social': partner.legal_name or '',
+                'razao_social': partner.legal_name or partner.name,
                 'logradouro': partner.street or '',
                 'numero': partner.number or '',
                 'complemento': partner.street2 or '',
@@ -145,8 +157,6 @@ class InvoiceEletronic(models.Model):
 
             if self.informacoes_legais:
                 descricao += self.informacoes_legais + '\n'
-            if self.informacoes_complementares:
-                descricao += self.informacoes_complementares
 
             rps = {
                 'tomador': tomador,
@@ -301,6 +311,12 @@ class InvoiceEletronic(models.Model):
         cert_pfx = base64.decodestring(cert)
         certificado = Certificado(cert_pfx, self.company_id.nfe_a1_password)
 
+        if self.ambiente == 'homologacao' or \
+           self.company_id.tipo_ambiente_nfse == 'homologacao':
+            self.state = 'cancel'
+            self.codigo_retorno = '100'
+            self.mensagem_retorno = 'Nota Fiscal Paulistana Cancelada'
+            return
         company = self.company_id
         canc = {
             'cnpj_remetente': re.sub('[^0-9]', '', company.cnpj_cpf),
