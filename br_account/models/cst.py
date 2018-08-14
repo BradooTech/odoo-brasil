@@ -3,17 +3,47 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 CST_ICMS = [
-    ('00', u'00 - Tributada Integralmente'),
-    ('10', u'10 - Tributada e com cobrança do ICMS por substituição tributária'),  # noqa
-    ('20', u'20 - Com redução de base de cálculo'),
-    ('30', u'30 - Isenta ou não tributada e com cobrança do ICMS por substituição tributária'),  # noqa
-    ('40', u'40 - Isenta'),
-    ('41', u'41 - Não tributada'),
-    ('50', u'50 - Suspensão'),
-    ('51', u'51 - Diferimento'),
-    ('60', u'60 - ICMS cobrado anteriormente por substituição tributária'),
-    ('70', u'70 - Com redução de base de cálculo e cobrança do ICMS por substituição tributária'),  # noqa
-    ('90', u'90 - Outras')
+    ('00', u'000 - Tributada Integralmente - Nacional'),
+    ('100', u'100 - Tributada Integralmente - Estrangeira (Importação Direta)'),
+    ('200', u'200 - Tributada Integralmente - Estrangeira (Adquirida no mercado interno)'),
+    ('10', u'010 - Tributada e com cobrança do ICMS por substituição tributária - Nacional'),  # noqa
+    ('110', u'110 - Tributada e com cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Importação Direta)'),  # noqa
+    ('210', u'210 - Tributada e com cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Adquirida no mercado interno)'),  # noqa
+    ('20', u'020 - Com redução de base de cálculo - Nacional'),
+    ('120', u'120 - Com redução de base de cálculo - Estrangeira (Importação Direta)'),
+    ('220', u'220 - Com redução de base de cálculo - Estrangeira (Adquirida no mercado interno)'),
+    ('30', u'030 - Isenta ou não tributada e com cobrança do ICMS por substituição tributária - Nacional'), # noqa
+    ('130', u'130 - Isenta ou não tributada e com cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Importação Direta)'), # noqa
+    ('230', u'230 - Isenta ou não tributada e com cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Adquirida no mercado interno)'), # noqa
+    ('40', u'040 - Isenta - Nacional'),
+    ('140', u'140 - Isenta - Estrangeira (Importação Direta)'),
+    ('240', u'240 - Isenta - Estrangeira (Adquirida no mercado interno)'),
+    ('41', u'041 - Não tributada - Nacional'),
+    ('141', u'141 - Não tributada - Estrangeira (Importação Direta)'),
+    ('241', u'241 - Não tributada - Estrangeira (Adquirida no mercado interno)'),
+    ('50', u'050 - Suspensão - Nacional'),
+    ('150', u'150 - Suspensão - Estrangeira (Importação Direta)'),
+    ('250', u'250 - Suspensão - Estrangeira (Adquirida no mercado interno)'),
+    ('51', u'051 - Diferimento - Nacional'),
+    ('151', u'151 - Diferimento - Estrangeira (Importação Direta)'),
+    ('251', u'251 - Diferimento - Estrangeira (Adquirida no mercado interno)'),
+    ('60', u'060 - ICMS cobrado anteriormente por substituição tributária - Nacional'),
+    ('160', u'160 - ICMS cobrado anteriormente por substituição tributária - '
+                u'Estrangeira (Importação Direta)'),
+    ('260', u'260 - ICMS cobrado anteriormente por substituição tributária - '
+                u'Estrangeira (Adquirida no mercado interno)'),
+    ('70', u'070 - Com redução de base de cálculo e cobrança do ICMS por substituição tributária - Nacional'),# noqa
+    ('170', u'170 - Com redução de base de cálculo e cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Importação Direta)'),  # noqa
+    ('270', u'270 - Com redução de base de cálculo e cobrança do ICMS por substituição tributária - '
+                u'Estrangeira (Adquirida no mercado interno)'),  # noqa
+    ('90', u'090 - Outras - Nacional'),
+    ('190', u'190 - Outras - Estrangeira (Importação Direta)'),
+    ('290', u'290 - Outras - Estrangeira (Adquirida no mercado interno)')
 ]
 
 CSOSN_SIMPLES = [
