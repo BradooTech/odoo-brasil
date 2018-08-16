@@ -19,6 +19,7 @@
         'br_account_einvoice',
         'br_stock_account',
         'br_account_payment',
+        'br_delivery',
     ],
     'external_dependencies': {
         'python': [
