@@ -118,13 +118,13 @@ class AccountInvoice(models.Model):
             'item_pedido_compra': line.item_pedido_compra,
             # - ICMS -
             'icms_cst': line.icms_cst,
-            'icms_aliquota': line.icms_aliquota,
+            'icms_aliquota': line.tax_icms_id.amount,
             'icms_tipo_base': line.icms_tipo_base,
             'icms_aliquota_reducao_base': line.icms_aliquota_reducao_base,
             'icms_base_calculo': line.icms_base_calculo,
             'icms_valor': line.icms_valor,
             # - ICMS ST -
-            'icms_st_aliquota': line.icms_st_aliquota,
+            'icms_st_aliquota': line.tax_icms_st_id.amount,
             'icms_st_aliquota_mva': line.icms_st_aliquota_mva,
             'icms_st_aliquota_reducao_base': line.\
             icms_st_aliquota_reducao_base,
@@ -135,7 +135,7 @@ class AccountInvoice(models.Model):
             'icms_valor_credito': line.icms_valor_credito,
             # - IPI -
             'ipi_cst': line.ipi_cst,
-            'ipi_aliquota': line.ipi_aliquota,
+            'ipi_aliquota': line.tax_ipi_id.amount,
             'ipi_base_calculo': line.ipi_base_calculo,
             'ipi_reducao_bc': line.ipi_reducao_bc,
             'ipi_valor': line.ipi_valor,
@@ -146,36 +146,36 @@ class AccountInvoice(models.Model):
             'ii_valor_iof': line.ii_valor_iof,
             # - PIS -
             'pis_cst': line.pis_cst,
-            'pis_aliquota': abs(line.pis_aliquota),
+            'pis_aliquota': abs(line.tax_pis_id.amount),
             'pis_base_calculo': line.pis_base_calculo,
             'pis_valor': abs(line.pis_valor),
             'pis_valor_retencao':
             abs(line.pis_valor) if line.pis_valor < 0 else 0,
             # - COFINS -
             'cofins_cst': line.cofins_cst,
-            'cofins_aliquota': abs(line.cofins_aliquota),
+            'cofins_aliquota': abs(line.tax_cofins_id.amount),
             'cofins_base_calculo': line.cofins_base_calculo,
             'cofins_valor': abs(line.cofins_valor),
             'cofins_valor_retencao':
             abs(line.cofins_valor) if line.cofins_valor < 0 else 0,
             # - ISSQN -
             'issqn_codigo': line.service_type_id.code,
-            'issqn_aliquota': abs(line.issqn_aliquota),
+            'issqn_aliquota': abs(line.tax_issqn_id.amount),
             'issqn_base_calculo': line.issqn_base_calculo,
             'issqn_valor': abs(line.issqn_valor),
             'issqn_valor_retencao':
             abs(line.issqn_valor) if line.issqn_valor < 0 else 0,
             # - RETENÇÔES -
             'csll_base_calculo': line.csll_base_calculo,
-            'csll_aliquota': abs(line.csll_aliquota),
+            'csll_aliquota': abs(line.tax_csll_id.amount),
             'csll_valor_retencao':
             abs(line.csll_valor) if line.csll_valor < 0 else 0,
             'irrf_base_calculo': line.irrf_base_calculo,
-            'irrf_aliquota': abs(line.irrf_aliquota),
+            'irrf_aliquota': abs(line.tax_irrf_id.amount),
             'irrf_valor_retencao':
             abs(line.irrf_valor) if line.irrf_valor < 0 else 0,
             'inss_base_calculo': line.inss_base_calculo,
-            'inss_aliquota': abs(line.inss_aliquota),
+            'inss_aliquota': abs(line.tax_inss_id.amount),
             'inss_valor_retencao':
             abs(line.inss_valor) if line.inss_valor < 0 else 0,
         }
