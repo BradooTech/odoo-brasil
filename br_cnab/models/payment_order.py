@@ -21,8 +21,13 @@ class PaymentOrder(models.Model):
         if len(self.line_ids) < 1:
             raise UserError(
                 u'Ordem de Cobrança não possui Linhas de Cobrança!')
+
+        if not self.payment_mode_id.file_number_sequence:
+            raise UserError(
+                'Sequencia de numero de arquivo não definido'
+            )
         self.data_emissao_cnab = datetime.now()
-        self.file_number = self.env['ir.sequence'].next_by_code('cnab.nsa')
+        self.file_number = self.payment_mode_id.file_number_sequence.next_by_id()
         for order_id in self:
             order = self.env['payment.order'].browse(order_id.id)
             cnab = Cnab.get_cnab(
