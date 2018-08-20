@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <record id="laager_account_fiscal_position_tax_rule" model="ir.ui.view">
+            <field name="name">br_account.tax.rule.form</field>
+            <field name="model">account.fiscal.position.tax.rule</field>
+            <field name="inherit_id" ref="br_account.br_account_tax_rule_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='tax_id']" position="after">
+                    <field name="reducao_icms"/>
+                </xpath>
+
+            </field>
+        </record>
+    </data>
+</odoo>

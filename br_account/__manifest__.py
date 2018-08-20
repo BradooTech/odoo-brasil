@@ -25,6 +25,7 @@
         'views/product_view.xml',
         'views/res_company_view.xml',
         'views/account_tax.xml',
+        'views/account_fiscal_position_tax_rule.xml',
         'views/product_fiscal_classification.xml',
         'views/account_invoice_refund.xml',
         'views/res_config_settings.xml',
