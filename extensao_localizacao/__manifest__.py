@@ -21,6 +21,7 @@
     'data': [
         # 'security/ir.model.access.csv',
         'views/account_fiscal_position.xml',
+        'views/account_invoice.xml'
     ],
     # only loaded in demonstration mode
     'demo': [

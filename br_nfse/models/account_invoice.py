@@ -26,12 +26,13 @@ class AccountInvoice(models.Model):
     def _prepare_edoc_vals(self, inv, inv_lines, serie_id):
         res = super(AccountInvoice, self)._prepare_edoc_vals(
             inv, inv_lines, serie_id)
+        numero_nfse = self.action_number(serie_id)
         res['nfse_eletronic'] = inv.nfse_eletronic
         res['ambiente'] = inv.ambiente_nfse
         res['serie'] = serie_id.id
         res['serie_documento'] = serie_id.code
         res['model'] = serie_id.fiscal_document_id.code
-        res['numero'] = serie_id.internal_sequence_id.next_by_id()
+        res['numero'] = numero_nfse
         return res
 
 
