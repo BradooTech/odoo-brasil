@@ -8,7 +8,7 @@ import base64
 import logging
 import pytz
 from lxml import etree
-from datetime import datetime
+from datetime import datetime,timedelta
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DTFT
@@ -380,7 +380,7 @@ class InvoiceEletronic(models.Model):
         if self.model not in ('55', '65'):
             return res
 
-        dt_emissao = datetime.strptime(self.data_emissao, DTFT)
+        dt_emissao = datetime.strptime(self.data_emissao, DTFT) - timedelta(hours=3)
 
         ide = {
             'cUF': self.company_id.state_id.ibge_code,
@@ -404,6 +404,9 @@ class InvoiceEletronic(models.Model):
             'indPres': self.ind_pres or '1',
             'procEmi': 0
         }
+
+        print('\n*********************\n************data da emissao:',ide['dhEmi'])
+
         # Documentos Relacionados
         documentos = []
         for doc in self.fiscal_document_related_ids:
@@ -625,6 +628,7 @@ class InvoiceEletronic(models.Model):
                 'dVenc':  vencimento.strftime('%Y-%m-%d'),
                 'vDup': "%.02f" % dup.valor
             })
+
         cobr = {
             'fat': {
                 'nFat': self.numero_fatura or '',
