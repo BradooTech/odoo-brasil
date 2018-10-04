@@ -145,6 +145,15 @@ class Cnab240(Cnab):
         # Dígito verificador de agencia e conta
         # Era cedente_agencia_conta_dv agora é cedente_dv_ag_cc
 
+
+        #tratamento para o aceite diferenciado (pq o itau quer fazer tudo diferente) do itau
+        aceite = self.order.payment_mode_id.boleto_aceite
+        #print('\n\nVALOR DO ACEITW:::::::',aceite,self.order.payment_mode_id.boleto_type)
+
+        if self.order.payment_mode_id.boleto_type == '6' :
+            print('\n\nVALOR DO ACEITW:::::::',aceite)
+            if aceite=='S' : aceite='A'
+        
         return {
             'controle_banco': int(self.order.payment_mode_id.bank_account_id.
                                   bank_bic),
@@ -174,7 +183,7 @@ class Cnab240(Cnab):
             # TODO: Código adotado para identificar o título de cobrança.
             # 8 é Nota de cŕedito comercial
             'especie_titulo': int(self.order.payment_mode_id.boleto_especie),
-            'aceite_titulo': self.order.payment_mode_id.boleto_aceite,
+            'aceite_titulo': aceite,
             'data_emissao_titulo': self.format_date(
                 line.date),
             # Taxa de juros do Odoo padrão mensal: 2. Campo 27.3P
