@@ -92,7 +92,8 @@ class Cnab240(Cnab):
             'arquivo_codigo': 1,  # Remessa/Retorno
             'servico_operacao': u'R',
             'nome_banco': str(self.order.payment_mode_id.bank_account_id
-                              .bank_name)
+                              .bank_name),
+            'controlecob_numero' : self.order.file_number,
         }
 
     def get_file_numeration(self):
@@ -151,7 +152,6 @@ class Cnab240(Cnab):
         #print('\n\nVALOR DO ACEITW:::::::',aceite,self.order.payment_mode_id.boleto_type)
 
         if self.order.payment_mode_id.boleto_type == '6' :
-            print('\n\nVALOR DO ACEITW:::::::',aceite)
             if aceite=='S' : aceite='A'
         
         return {
