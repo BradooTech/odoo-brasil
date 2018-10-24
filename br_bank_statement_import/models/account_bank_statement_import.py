@@ -5,7 +5,7 @@
 import io
 import logging
 
-
+import re
 from odoo import fields, models
 from odoo.exceptions import UserError
 
@@ -40,7 +40,10 @@ class AccountBankStatementImport(models.TransientModel):
 
     def _check_ofx(self, data_file, raise_error=False):
         try:
-            OfxParser.parse(io.BytesIO(data_file))
+            a = data_file.decode('latin')
+            new_data_file = re.sub(u'[áéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]', '', a)
+            c = new_data_file.encode('utf-8')
+            OfxParser.parse(io.BytesIO(c))
             return True
         except Exception as e:
             if raise_error:
@@ -48,7 +51,11 @@ class AccountBankStatementImport(models.TransientModel):
             return False
 
     def _parse_ofx(self, data_file):
-        ofx = OfxParser.parse(io.BytesIO(data_file))
+        a = data_file.decode('latin')
+        new_data_file = re.sub(u'[áéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]', '', a)
+        c = new_data_file.encode('utf-8')
+
+        ofx = OfxParser.parse(io.BytesIO(c))
         transacoes = []
         total = 0.0
         index = 1  # Some banks don't use a unique transaction id, we make one
