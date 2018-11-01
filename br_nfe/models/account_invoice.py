@@ -126,7 +126,7 @@ class AccountInvoice(models.Model):
             elif inv.commercial_partner_id.state_id.code in ('AM', 'BA', 'CE',
                                                              'GO', 'MG', 'MS',
                                                              'MT', 'PE', 'RN',
-                                                             'SP'):
+                                                             'SP', 'SE'):
                 ind_ie_dest = '9'
             else:
                 ind_ie_dest = '2'
