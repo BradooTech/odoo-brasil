@@ -139,21 +139,37 @@ class AccountTax(models.Model):
             vals['base'] = base_tax
         return [vals]
 
-    def _compute_icms(self, price_base, ipi_value):
+    def _compute_icms(self, price_base, ipi_value, ii_value, pis_value, cofins_value):
         icms_tax = self.filtered(lambda x: x.domain == 'icms')
         if not icms_tax:
             return []
         vals = self._tax_vals(icms_tax)
         base_icms = price_base
         incluir_ipi = False
+        incluir_ii = False
+        incluir_pis = False
+        incluir_cofins = False
         reducao_icms = 0.0
         if 'incluir_ipi_base' in self.env.context:
             incluir_ipi = self.env.context['incluir_ipi_base']
+        if 'incluir_ii_base' in self.env.context:
+            incluir_ii = self.env.context['incluir_ii_base']
+        if 'incluir_pis_base' in self.env.context:
+            incluir_pis = self.env.context['incluir_pis_base']
+        if 'incluir_cofins_base' in self.env.context:
+            incluir_cofins = self.env.context['incluir_cofins_base']            
         if "icms_aliquota_reducao_base" in self.env.context:
             reducao_icms = self.env.context['icms_aliquota_reducao_base']
 
         if incluir_ipi:
             base_icms += ipi_value
+        if incluir_ii:
+            base_icms += ii_value
+        if incluir_pis:
+            base_icms += pis_value
+        if incluir_cofins:
+            base_icms += cofins_value
+
         if "valor_frete" in self.env.context:
             base_icms += self.env.context["valor_frete"]
         if "valor_seguro" in self.env.context:
@@ -345,9 +361,26 @@ class AccountTax(models.Model):
 
         price_base = price_unit * quantity
         ipi = self._compute_ipi(price_base)
+        ii = self._compute_ii(price_base)
+        pis = 0.0
+        cofins = 0.0
+
+        pis_cofins_tax = self.filtered(lambda x: x.domain in ('pis', 'cofins'))
+        for tax in pis_cofins_tax:
+            vals = self._tax_vals(tax)
+            pis_cofins = self._compute_pis_cofins(price_base)
+            if tax.domain == 'pis':
+                pis = pis_cofins[0]['amount'] if pis_cofins else 0.0,
+            if tax.domain == 'cofins':
+                cofins = pis_cofins[1]['amount'] if pis_cofins else 0.0,
+
         icms = self._compute_icms(
             price_base,
-            ipi[0]['amount'] if ipi else 0.0)
+            ipi[0]['amount'] if ipi else 0.0,
+            ii[0]['amount'] if ii else 0.0,
+            pis[0] if pis else 0.0,
+            cofins[0] if cofins else 0.0,
+            )
         icmsst = self._compute_icms_st(
             price_base,
             ipi[0]['amount'] if ipi else 0.0,
