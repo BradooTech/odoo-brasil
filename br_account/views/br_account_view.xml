@@ -217,7 +217,7 @@
         </field>
     </record>
 
-    <record id="br_account_cfop_search" model="ir.ui.view">
+    <!-- <record id="br_account_cfop_search" model="ir.ui.view">
         <field name="name">br_account.cfop.search</field>
         <field name="model">br_account.cfop</field>
         <field name="arch" type="xml">
@@ -234,7 +234,7 @@
                 </group>
             </search>
         </field>
-    </record>
+    </record> -->
 
     <record id="br_account_cfop_tree" model="ir.ui.view">
         <field name="name">br_account.cfop.tree</field>

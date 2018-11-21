@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="res_config_settings_email" model="ir.ui.view">
+ <!--    <record id="res_config_settings_email" model="ir.ui.view">
         <field name="name">res_config_settings.email</field>
         <field name="model">res.config.settings</field>
         <field name="inherit_id" ref="br_account.account_config_settings_email_templates"/>
@@ -24,5 +24,5 @@
                 </div>
             </div>
         </field>
-    </record>
+    </record> -->
 </odoo>

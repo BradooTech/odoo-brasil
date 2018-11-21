@@ -111,8 +111,8 @@ class InvoiceEletronic(models.Model):
         res = super(InvoiceEletronic, self)._prepare_eletronic_invoice_values()
         if self.model == '001':
             tz = pytz.timezone(self.env.user.partner_id.tz) or pytz.utc
-            dt_emissao = datetime.strptime(self.data_emissao, DTFT)
-            dt_emissao = pytz.utc.localize(dt_emissao).astimezone(tz)
+            dt_emissao = str(self.data_emissao)
+            dt_emissao = pytz.utc.localize(self.data_emissao).astimezone(tz)
             dt_emissao = dt_emissao.strftime('%Y-%m-%d')
 
             partner = self.commercial_partner_id
@@ -258,7 +258,7 @@ class InvoiceEletronic(models.Model):
             cert = self.company_id.with_context(
                 {'bin_size': False}).nfe_a1_file
             cert_pfx = base64.decodestring(cert)
-
+            
             certificado = Certificado(
                 cert_pfx, self.company_id.nfe_a1_password)
 

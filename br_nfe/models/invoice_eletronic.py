@@ -263,12 +263,12 @@ class InvoiceEletronic(models.Model):
             'NCM': re.sub('[^0-9]', '', item.ncm or '')[:8],
             'EXTIPI': re.sub('[^0-9]', '', item.ncm or '')[8:],
             'CFOP': item.cfop,
-            'uCom': '{:.6}'.format(item.uom_id.name or ''),
+            'uCom': '{:.6}'.format(item.product_id.uom_id.name or ' '),
             'qCom': item.quantidade,
             'vUnCom': "%.02f" % item.preco_unitario,
             'vProd':  "%.02f" % (item.preco_unitario * item.quantidade),
             'cEANTrib': item.product_id.barcode or 'SEM GTIN',
-            'uTrib': '{:.6}'.format(item.uom_id.name or ''),
+            'uTrib': '{:.6}'.format(item.product_id.uom_id.name or ''),
             'qTrib': item.quantidade,
             'vUnTrib': "%.02f" % item.preco_unitario,
             'vFrete': "%.02f" % item.frete if item.frete else '',
@@ -380,7 +380,7 @@ class InvoiceEletronic(models.Model):
         if self.model not in ('55', '65'):
             return res
 
-        dt_emissao = datetime.strptime(self.data_emissao, DTFT) - timedelta(hours=3)
+        dt_emissao = self.data_emissao - timedelta(hours=3)
 
         ide = {
             'cUF': self.company_id.state_id.ibge_code,
@@ -737,7 +737,7 @@ class InvoiceEletronic(models.Model):
         chave_dict = {
             'cnpj': re.sub('[^0-9]', '', self.company_id.cnpj_cpf),
             'estado': self.company_id.state_id.ibge_code,
-            'emissao': self.data_emissao[2:4] + self.data_emissao[5:7],
+            'emissao': str(self.data_emissao)[2:4] + str(self.data_emissao)[5:7],
             'modelo': self.model,
             'numero': self.numero,
             'serie': self.serie.code.zfill(3),
