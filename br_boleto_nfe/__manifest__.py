@@ -19,7 +19,7 @@
         'br_boleto', 'br_account_einvoice'
     ],
     'data': [
-        'views/res_config_settings.xml',
+        # 'views/res_config_settings.xml',
     ],
     'auto_install': True,
 }

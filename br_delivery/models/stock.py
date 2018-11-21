@@ -59,7 +59,7 @@ class StockMove(models.Model):
 
 
 class Incoterms(models.Model):
-    _inherit = "stock.incoterms"
+    _name = "stock.incoterms"
 
     freight_responsibility = fields.Selection(
         [('0', u'0 - Emitente'),

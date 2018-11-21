@@ -16,7 +16,7 @@
         </field>
     </record>
 
-    <record id="stock_incoterms_delivery_form" model="ir.ui.view">
+<!--     <record id="stock_incoterms_delivery_form" model="ir.ui.view">
         <field name="name">stock.incoterms.delivery.form</field>
         <field name="model">stock.incoterms</field>
         <field name="inherit_id" ref="stock.stock_incoterms_form"/>
@@ -25,5 +25,5 @@
                 <field name="freight_responsibility" />
             </field>
         </field>
-    </record>
+    </record> -->
 </odoo>

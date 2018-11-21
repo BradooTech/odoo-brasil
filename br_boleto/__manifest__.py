@@ -26,7 +26,7 @@
     },
     'data': [
         'security/ir.model.access.csv',
-        'views/res_config_settings.xml',
+        # 'views/res_config_settings.xml',
         'views/account_invoice.xml',
         'views/account_move_line.xml',
         'views/res_partner_bank.xml',
