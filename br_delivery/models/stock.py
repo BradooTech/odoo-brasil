@@ -53,8 +53,6 @@ class StockMove(models.Model):
         vals = super(StockMove, self)._get_new_picking_values()
         vals['incoterm'] = self.sale_line_id.order_id.incoterm.id
         vals['carrier_id'] = self.sale_line_id.order_id.carrier_id.id
-        vals['freight_responsibility'] =\
-            self.sale_line_id.order_id.incoterm.freight_responsibility
         return vals
 
 
