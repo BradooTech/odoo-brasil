@@ -370,9 +370,9 @@ class AccountTax(models.Model):
             vals = self._tax_vals(tax)
             pis_cofins = self._compute_pis_cofins(price_base)
             if tax.domain == 'pis':
-                pis = pis_cofins[0]['amount'] if pis_cofins else 0.0,
+                pis = pis_cofins[0]['amount'] if len(pis_cofins) > 0 else 0.0,  # Ajustado para gerar Fatura quando não possui impostos
             if tax.domain == 'cofins':
-                cofins = pis_cofins[1]['amount'] if pis_cofins else 0.0,
+                cofins = pis_cofins[1]['amount'] if len(pis_cofins) > 1 else 0.0, # Ajustado para gerar Fatura quando não possui impostos
 
         icms = self._compute_icms(
             price_base,
