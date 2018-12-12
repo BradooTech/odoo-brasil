@@ -38,5 +38,5 @@ class SaleOrder(models.Model):
 
     @api.onchange('carrier_id')
     def onchange_carrier_id(self):
-        if self.carrier_id:
+        if self.carrier_id.incoterm:
             self.incoterm = self.carrier_id.incoterm
