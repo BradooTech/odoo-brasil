@@ -100,3 +100,9 @@ class AccountBankStatementImport(models.TransientModel):
             account_number,
             [vals_bank_statement]
         )
+
+    def _check_journal_bank_account(self, journal, account_number):
+        if journal.bank_account_id.sanitized_acc_number in account_number:
+            return True
+        else:
+            return False
