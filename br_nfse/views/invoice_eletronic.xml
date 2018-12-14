@@ -17,7 +17,7 @@
                 <field name="numero_nfse" />
             </field>
             <field name="mensagem_retorno" position="after">
-                <span attrs="{'invisible': [('model', '!=', '991')]}">
+                <span attrs="{'invisible': [('model', 'in', ('55','65','992','993'))]}">
                     <br /><b>Código Verificação:</b> <field name="verify_code" class="oe_inline" readonly="1"/>
                 </span>
             </field>
