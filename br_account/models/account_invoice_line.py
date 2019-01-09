@@ -3,7 +3,7 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-
+from lxml import etree
 from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
 from odoo.addons.br_account.models.cst import CST_ICMS
@@ -657,3 +657,20 @@ class AccountInvoiceLine(models.Model):
         if self.tax_inss_id:
             self.inss_aliquota = self.tax_inss_id.amount
         self._update_invoice_line_ids()
+
+    @api.model
+    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+        res = super(AccountInvoiceLine, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('type'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='product_id']"):
+                if self._context['type'] in ('in_invoice', 'in_refund'):
+                    # Hack to fix the stable version 8.0 -> saas-12
+                    # purchase_ok will be moved from purchase to product in master #13271
+                    if 'purchase_ok' in self.env['product.template']._fields:
+                        node.set('domain', "[('purchase_ok', '=', True)]")
+                else:
+                    node.set('domain', "[(1,'=',1)]")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res
