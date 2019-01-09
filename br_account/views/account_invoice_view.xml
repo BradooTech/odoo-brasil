@@ -471,6 +471,23 @@
             </form>
         </field>
     </record>
+
+    <record id="view_account_invoice_filter" model="ir.ui.view">
+        <field name="name">account.invoice.select</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='draft']" position="before">
+                <filter string="Faturas com Cobrança" name="filter_cobravel"
+                    domain="[('fiscal_position_id.no_customer_cost', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record model="ir.actions.act_window" id="account.action_invoice_tree1">
+        <field name="context" eval="{'search_default_filter_cobravel': 1}"/>
+    </record>
+
     <record id="group_edit_bases_calculo" model="res.groups">
         <field name="name">Habilitar edição das bases de cálculo</field>
         <field name="category_id" ref="base.module_category_hidden"/>
