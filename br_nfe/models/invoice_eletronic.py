@@ -639,11 +639,19 @@ class InvoiceEletronic(models.Model):
             },
             'dup': duplicatas
         }
-        pag = [{
-            'indPag': self.payment_term_id.indPag or '0',
-            'tPag': self.payment_mode_id.tipo_pagamento or '15',
-            'vPag': "%.02f" % self.valor_final
-        }]
+        if self.payment_mode_id.tipo_pagamento == '90':
+            pag = [{
+                'tPag': self.payment_mode_id.tipo_pagamento or '15',
+                'vPag': '0.00',
+            }]
+
+        else:
+            pag = [{
+                'indPag': self.payment_term_id.indPag or '0',
+                'tPag': self.payment_mode_id.tipo_pagamento or '15',
+                'vPag': "%.02f" % self.valor_final
+            }]
+
         self.informacoes_complementares = self.informacoes_complementares.\
             replace('\n', '<br />')
         self.informacoes_legais = self.informacoes_legais.replace(
