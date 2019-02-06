@@ -639,19 +639,36 @@ class InvoiceEletronic(models.Model):
             },
             'dup': duplicatas
         }
-        pag = [{
-            'indPag': self.payment_term_id.indPag or '0',
-            'tPag': self.payment_mode_id.tipo_pagamento or '15',
-            'vPag': "%.02f" % self.valor_final
-        }]
+        if self.payment_mode_id.tipo_pagamento == '90':
+            pag = [{
+                'tPag': self.payment_mode_id.tipo_pagamento or '15',
+                'vPag': '0.00',
+            }]
+
+        else:
+            pag = [{
+                'indPag': self.payment_term_id.indPag or '0',
+                'tPag': self.payment_mode_id.tipo_pagamento or '15',
+                'vPag': "%.02f" % self.valor_final
+            }]
+
         self.informacoes_complementares = self.informacoes_complementares.\
             replace('\n', '<br />')
         self.informacoes_legais = self.informacoes_legais.replace(
             '\n', '<br />')
-        infAdic = {
-            'infCpl': self.informacoes_complementares or '',
-            'infAdFisco': self.informacoes_legais or '',
-        }
+
+        if self.valor_estimado_tributos > 0.00:
+            percent_vr_aprox_trib = (self.valor_estimado_tributos / self.valor_final) * 100
+            
+            infAdic = {
+                'infCpl': self.informacoes_complementares + ' - ' +'Total de impostos estimados: ' + str(self.valor_estimado_tributos) + '(' + str("%.2f" % percent_vr_aprox_trib) + '%) - Fonte: IBPT',
+                'infAdFisco': self.informacoes_legais or '',
+            }
+        else:
+            infAdic = {
+                'infCpl': self.informacoes_complementares or '',
+                'infAdFisco': self.informacoes_legais or '',
+            }
         compras = {
             'xNEmp': self.nota_empenho or '',
             'xPed': self.pedido_compra or '',
