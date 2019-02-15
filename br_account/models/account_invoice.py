@@ -397,23 +397,3 @@ class AccountInvoice(models.Model):
         res['service_document_id'] = invoice.service_document_id.id
         res['service_serie_id'] = invoice.service_serie_id.id
         return res
-
-    @api.multi
-    def action_invoice_open(self):
-        res = super(AccountInvoice, self).action_invoice_open()
-
-        if self.service_document_id.code in ['001','002','003','004','005','006','007','991']:
-            validation = self.env['ir.module.module'].search([("name", "=", "br_nfse")])
-            if validation.state != 'installed':
-                raise UserError (u"Módulo de Envio de NFS-e não instalado. \
-                    Por favor contate o Adminstrador!")
-        elif self.product_document_id.code in ['55','65']:
-            validation = self.env['ir.module.module'].search([("name", "=", "br_nfe")])
-            if validation.state != 'installed':
-                raise UserError (u"Módulo de Envio de NF-e não instalado. \
-                    Por favor contate o Adminstrador!")
-        return res
-    '''
-    Metodo de validacao do invoice no caso do modulo necessario para a criacao
-    da Nota Fiscal nao esteja instalado.
-    '''
