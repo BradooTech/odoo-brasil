@@ -44,8 +44,8 @@ class AccountInvoice(models.Model):
         res['tax_ii_id'] = ii and ii.id or False
         res['tax_issqn_id'] = issqn and issqn.id or False
         res['tax_csll_id'] = csll and csll.id or False
-        res['tax_irrf_id'] = inss and inss.id or False
-        res['tax_inss_id'] = irrf and irrf.id or False
+        res['tax_irrf_id'] = irrf and irrf.id or False
+        res['tax_inss_id'] = inss and inss.id or False
 
         res['product_type'] = line.product_id.fiscal_type
         res['company_fiscal_type'] = line.company_id.fiscal_type
