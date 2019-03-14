@@ -87,8 +87,7 @@ class HrEmployee(models.Model):
     dependent_ids = fields.One2many('hr.employee.dependent',
                                     'employee_id', 'Dependentes')
     rg = fields.Char('RG', help=u'Número do RG')
-    cpf = fields.Char(related='address_home_id.cnpj_cpf',
-                      string='CPF')
+    cpf = fields.Char(string='CPF')
     organ_exp = fields.Char(u"Orgão de expedição")
     rg_emission = fields.Date(u'Data de emissão')
     title_voter = fields.Char('Title', help=u'Número título')
@@ -105,6 +104,24 @@ class HrEmployee(models.Model):
                                      compute=_number_dependents)
     no_of_dependent_health_plan = fields.Integer(u'Número de dependentes',
                                                  compute=_number_dependents)
+                                                 
+    #Implementação Bradoo
+    ctps_end_date = fields.Date(u'Data de demissão')
+
+    base_salary = fields.Float(u'Salário Base')
+    transportation_vouchers = fields.Float(u'Vale Transporte')
+    meal_ticket = fields.Float(u'Vale Refeição')
+    health_care = fields.Float(u'Assistência Médica')
+    others_assists = fields.Float(u'Outras Assistências')
+    admission_date = fields.Date(u'Data de Admissão')
+    employee_evolution = fields.Text(u'Evolução do Funcionário')
+
+    @api.onchange('job_id')
+    def _onchange_employee_evolution(self):
+        if self.employee_evolution:
+            self.employee_evolution += ' >>> ' + self.job_id.name
+        else:
+            self.employee_evolution = self.job_id.name
 
 
 class HrEmployeeDependent(models.Model):

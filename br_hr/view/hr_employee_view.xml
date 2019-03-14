@@ -17,6 +17,15 @@
                                 <field name="ctps" string="Number"/>
                                 <field name="ctps_series" />
                                 <field name="ctps_date"/>
+                                <field name="admission_date"/>
+                                <field name="ctps_end_date"/>
+                            </group>
+                            <group string="Benefícios">
+                                <field name="base_salary"/>
+                                <field name="transportation_vouchers"/>
+                                <field name="meal_ticket"/>
+                                <field name="health_care"/>
+                                <field name="others_assists"/>
                             </group>
                             <group string="RG">
                                 <field name="rg" string="Number"/>
@@ -43,6 +52,9 @@
                             <group string="Pais">
                                 <field name="father_name"/>
                                 <field name="mother_name"/>
+                            </group>
+                            <group string="Evolução">
+                                <field name="employee_evolution" readonly="True"/>
                             </group>
                         </group>
                     </form>
