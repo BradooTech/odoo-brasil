@@ -82,6 +82,9 @@ class ResCompany(models.Model):
 
     @api.one
     def _compute_expiry_date(self):
+        if not self.with_context(bin_size=False).nfe_a1_file:
+            return
+        
         try:
             pfx = base64.decodestring(
                 self.with_context(bin_size=False).nfe_a1_file)
