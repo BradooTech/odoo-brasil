@@ -42,7 +42,7 @@
                 <field name="suframa" placeholder="Suframa"/>
             </field>
             <group position="inside">
-                <group string="Digital Certificate">
+                <group string="Digital Certificate" name="digital_certificate">
                     <field name="nfe_a1_file" />
                     <field name="nfe_a1_password" password="True" />
                     <field name="cert_state" />
