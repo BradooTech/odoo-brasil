@@ -21,6 +21,7 @@ class AccountInvoice(models.Model):
         lines = self.invoice_line_ids
         self.total_tax = sum(l.price_tax for l in lines)
         self.icms_base = sum(l.icms_base_calculo for l in lines)
+        self.valor_icms_desoneracao = sum(l.valor_icms_desoneracao for l in lines)
         self.icms_value = sum(l.icms_valor for l in lines)
         self.icms_st_base = sum(l.icms_st_base_calculo for l in lines)
         self.icms_st_value = sum(l.icms_st_valor for l in lines)
@@ -254,6 +255,10 @@ class AccountInvoice(models.Model):
         store=True,
         digits=dp.get_precision('Account'),
         compute='_compute_amount')
+
+    valor_icms_desoneracao = fields.Float(
+        string='Valor ICMS Desoneração', digits=dp.get_precision('Account'),
+        compute='_compute_amount', store=True)
 
     @api.onchange('fiscal_position_id')
     def _onchange_br_account_fiscal_position_id(self):

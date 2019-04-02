@@ -288,6 +288,11 @@
                                     <field name="icms_tipo_base" invisible="1"/>
                                     <field name="incluir_ipi_base" />
                                     <field name="tem_difal" />
+                                    <field name="habilita_desoneracao" />
+                                    <field name="motivo_icms_desoneracao"  attrs="{'invisible': [('habilita_desoneracao', '==', False)],
+                                        'required':[('habilita_desoneracao', '==', True)]}"/>
+                                    <field name="valor_icms_desoneracao"  attrs="{'invisible': [('habilita_desoneracao', '==', False)]}"
+                                        readonly="1"/>
                                 </group>
                                 <group>
                                     <field name="icms_rule_id" />

@@ -167,8 +167,7 @@ class AccountInvoice(models.Model):
 
         res['fiscal_document_related_ids'] = documentos
         return res
-
-    def _prepare_edoc_item_vals(self, invoice_line):
+def _prepare_edoc_item_vals(self, invoice_line):
         vals = super(AccountInvoice, self).\
             _prepare_edoc_item_vals(invoice_line)
 

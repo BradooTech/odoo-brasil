@@ -199,6 +199,7 @@ class AccountInvoice(models.Model):
             'payment_term_id': invoice.payment_term_id.id,
             'fiscal_position_id': invoice.fiscal_position_id.id,
             'valor_icms': invoice.icms_value,
+            'valor_icms_desoneracao': invoice.valor_icms_desoneracao,
             'valor_icmsst': invoice.icms_st_value,
             'valor_ipi': invoice.ipi_value,
             'valor_pis': invoice.pis_value,

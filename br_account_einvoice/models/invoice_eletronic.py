@@ -188,6 +188,18 @@ class InvoiceEletronic(models.Model):
     email_sent = fields.Boolean(string=u"Email enviado", default=False,
                                 readonly=True, states=STATE)
 
+    valor_icms_desoneracao = fields.Float(string='Valor ICMS Deson.',
+        digits=dp.get_precision('Account'), readonly=True, states=STATE,
+        store=True)
+
+    motivo_icms_desoneracao = fields.Selection(string='Motivo ICMS Deson.',
+        selection=[
+            ('3','3 - Uso na agropecuária'),
+            ('9','9 - Outros'),
+            ('12','12 - Órgão de fomento e desenv. agrop.')],
+            default=False)
+
+
     def _create_attachment(self, prefix, event, data):
         file_name = '%s-%s.xml' % (
             prefix, datetime.now().strftime('%Y-%m-%d-%H-%M'))
@@ -750,3 +762,14 @@ class InvoiceEletronicItem(models.Model):
         string="Account Invoice Line",
         comodel_name="account.invoice.line",
         )
+
+    valor_icms_desoneracao = fields.Float(string='Valor ICMS Deson.',
+        digits=dp.get_precision('Account'), readonly=True, states=STATE,
+        store=True)
+
+    motivo_icms_desoneracao = fields.Selection(string='Motivo ICMS Deson.',
+        selection=[
+            ('3','3 - Uso na agropecuária'),
+            ('9','9 - Outros'),
+            ('12','12 - Órgão de fomento e desenv. agrop.')],
+            default=False)

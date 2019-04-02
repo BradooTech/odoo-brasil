@@ -136,7 +136,7 @@ class AccountInvoiceLine(models.Model):
             base_icms_credito = 0.0
 
         price_subtotal_signed = price_subtotal_signed * sign
-        self.update({
+        values = {
             'price_total': taxes['total_included'] if taxes else subtotal,
             'price_tax': taxes['total_included'] - taxes['total_excluded']
             if taxes else 0,
@@ -169,7 +169,16 @@ class AccountInvoiceLine(models.Model):
             'inss_valor': sum([x['amount'] for x in inss]),
             'irrf_base_calculo': sum([x['base'] for x in irrf]),
             'irrf_valor': sum([x['amount'] for x in irrf]),
-        })
+        }
+
+        if self.habilita_desoneracao:
+            values = { 
+                **values,
+                'valor_icms_desoneracao': sum([x['amount'] for x in icms]),
+                'icms_valor': 0.00,
+            }
+
+        self.update(values)
 
     @api.multi
     @api.depends('icms_cst_normal', 'icms_csosn_simples',
@@ -503,6 +512,22 @@ class AccountInvoiceLine(models.Model):
         default=0.00)
 
     informacao_adicional = fields.Text(string=u"Informações Adicionais")
+
+    # =========================================================================
+    # ICMS Desoneração
+    # =========================================================================
+    habilita_desoneracao = fields.Boolean(string='ICMS desoneração?')
+
+    valor_icms_desoneracao = fields.Float(string='Valor ICMS Deson.',
+        compute='_compute_price', store=True,
+        digits=dp.get_precision('Account'), default=0.00)
+
+    motivo_icms_desoneracao = fields.Selection(string='Motivo ICMS Deson.',
+        selection=[
+            ('3','3 - Uso na agropecuária'),
+            ('9','9 - Outros'),
+            ('12','12 - Órgão de fomento e desenv. agrop.')],
+            default=False)
 
     def _update_tax_from_ncm(self):
         if self.product_id:
