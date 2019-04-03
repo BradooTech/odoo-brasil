@@ -72,6 +72,14 @@ class AccountFiscalPositionTaxRule(models.Model):
     tax_icms_fcp_id = fields.Many2one(
         'account.tax', string=u"% FCP", domain=[('domain', '=', 'fcp')])
 
+    habilita_desoneracao = fields.Boolean(string='ICMS desoneração?')
+    
+    motivo_icms_desoneracao = fields.Selection(string='Motivo ICMS Deson.',
+        selection=[
+            ('3','3 - Uso na agropecuária'),
+            ('9','9 - Outros'),
+            ('12','12 - Órgão de fomento e desenv. agrop.')],
+            default=False)
 
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
@@ -179,6 +187,8 @@ class AccountFiscalPosition(models.Model):
                 'icms_cst_normal': rules[0].cst_icms,
                 'icms_aliquota_reducao_base': rules[0].reducao_icms,
                 'incluir_ipi_base': rules[0].incluir_ipi_base,
+                'habilita_desoneracao': rules[0].habilita_desoneracao,
+                'motivo_icms_desoneracao': rules[0].motivo_icms_desoneracao,
                 # ICMS ST
                 'tax_icms_st_id': rules[0].tax_icms_st_id,
                 'icms_st_aliquota_mva': rules[0].aliquota_mva,

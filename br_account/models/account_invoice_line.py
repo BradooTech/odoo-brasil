@@ -49,6 +49,8 @@ class AccountInvoiceLine(models.Model):
             'issqn_base_calculo': self.issqn_base_calculo,
             'icms_aliquota_inter_part': self.icms_aliquota_inter_part,
             'l10n_br_issqn_deduction': self.l10n_br_issqn_deduction,
+            'habilita_desoneracao': self.habilita_desoneracao,
+            'motivo_icms_desoneracao': self.motivo_icms_desoneracao,
         }
 
     @api.one
