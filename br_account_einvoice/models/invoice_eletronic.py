@@ -20,6 +20,12 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 
 STATE = {'edit': [('readonly', False)]}
 
+EDOCUMENT_STATE = {
+    'draft': [('readonly', False)],
+    'edit': [('readonly', False)],
+    'error': [('readonly', False)],
+}
+
 
 class InvoiceEletronic(models.Model):
     _name = 'invoice.eletronic'
@@ -57,9 +63,13 @@ class InvoiceEletronic(models.Model):
     serie = fields.Many2one(
         'br_account.document.serie', string=u'Série',
         readonly=True, states=STATE)
-    serie_documento = fields.Char(string=u'Série Documento', size=6)
+    serie_documento = fields.Char(
+        string='Série Documento', 
+        readonly=True, 
+        states=EDOCUMENT_STATE, 
+        size=6)
     numero = fields.Integer(
-        string=u'Número', readonly=True, states=STATE)
+        string=u'Número', readonly=True, states=EDOCUMENT_STATE)
     numero_controle = fields.Integer(
         string=u'Número de Controle', readonly=True, states=STATE)
     data_emissao = fields.Datetime(
@@ -187,6 +197,16 @@ class InvoiceEletronic(models.Model):
 
     email_sent = fields.Boolean(string=u"Email enviado", default=False,
                                 readonly=True, states=STATE)
+
+    @api.multi
+    def write(self, vals):
+        res = super(InvoiceEletronic, self).write(vals)
+
+        number = vals.get('numero')
+        if number:
+            self.serie.number_next_actual = number
+
+        return res
 
     def _create_attachment(self, prefix, event, data):
         file_name = '%s-%s.xml' % (
