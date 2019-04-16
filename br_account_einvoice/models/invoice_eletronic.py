@@ -204,7 +204,7 @@ class InvoiceEletronic(models.Model):
 
         number = vals.get('numero')
         if number:
-            self.serie.number_next_actual = number
+            self.serie.number_next_actual = number + 1
 
         return res
 
