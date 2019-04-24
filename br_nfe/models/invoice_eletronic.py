@@ -314,7 +314,7 @@ class InvoiceEletronic(models.Model):
             })
 
         prod["DI"] = di_vals
-
+        
         imposto = {
             'vTotTrib': "%.02f" % item.tributos_estimados,
             'ICMS': {
@@ -332,8 +332,11 @@ class InvoiceEletronic(models.Model):
                 'pICMSST': "%.02f" % item.icms_st_aliquota,
                 'vICMSST': "%.02f" % item.icms_st_valor,
                 'pCredSN': "%.02f" % item.icms_aliquota_credito,
-                'vCredICMSSN': "%.02f" % item.icms_valor_credito
+                'vCredICMSSN': "%.02f" % item.icms_valor_credito,
+                'vICMSDeson' : "%.02f" % item.valor_icms_desoneracao,
+                'motDesICMS': item.motivo_icms_desoneracao if item.motivo_icms_desoneracao else False,
             },
+
             'IPI': {
                 'clEnq': item.classe_enquadramento_ipi or '',
                 'cEnq': item.codigo_enquadramento_ipi,
@@ -538,9 +541,9 @@ class InvoiceEletronic(models.Model):
                 self._prepare_eletronic_invoice_item(item, self))
         total = {
             # ICMS
-            'vBC': "%.02f" % self.valor_bc_icms,
+            'vBC': "%.02f" % self.valor_bc_icms if self.valor_icms_desoneracao <= 0.00 else '0.00',
             'vICMS': "%.02f" % self.valor_icms,
-            'vICMSDeson': '0.00',
+            'vICMSDeson': "%.02f" % self.valor_icms_desoneracao,
             'vFCP': '0.00',  # TODO Implementar aqui
             'vBCST': "%.02f" % self.valor_bc_icmsst,
             'vST': "%.02f" % self.valor_icmsst,
