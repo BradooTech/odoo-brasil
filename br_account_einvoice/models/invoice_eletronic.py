@@ -203,7 +203,7 @@ class InvoiceEletronic(models.Model):
         res = super(InvoiceEletronic, self).write(vals)
 
         number = vals.get('numero')
-        if number:
+        if number and isinstance(number, int):
             self.serie.number_next_actual = number + 1
 
         return res
