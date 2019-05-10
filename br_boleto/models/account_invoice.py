@@ -89,6 +89,7 @@ class AccountInvoice(models.Model):
                     error += u'Cliente - Estado\n'
 
                 if item.number and len(item.number) > 12:
+                    print(item.number)
                     error += u'Numeração da fatura deve ser menor que 12 ' + \
                         'caracteres quando usado boleto\n'
 

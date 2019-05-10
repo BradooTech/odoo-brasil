@@ -73,9 +73,9 @@ class Boleto:
     def _move_line(self, move_line):
         self._payment_mode(move_line.payment_mode_id)
         self.boleto.data_vencimento = datetime.date(datetime.strptime(
-            move_line.date_maturity, '%Y-%m-%d'))
+            str(move_line.date_maturity), '%Y-%m-%d'))
         self.boleto.data_documento = datetime.date(datetime.strptime(
-            move_line.invoice_id.date_invoice, '%Y-%m-%d'))
+            str(move_line.invoice_id.date_invoice), '%Y-%m-%d'))
         self.boleto.data_processamento = date.today()
         self.boleto.valor = str("%.2f" % (move_line.debit or move_line.credit))
         self.boleto.valor_documento = str("%.2f" % (move_line.debit or
@@ -145,6 +145,7 @@ class Boleto:
         from pyboleto.pdf import BoletoPDF
         boleto = BoletoPDF(fbuffer)
         for i in range(len(boleto_list)):
+            print(boleto_list[i])
             boleto.drawBoleto(boleto_list[i])
             boleto.nextPage()
         boleto.save()
