@@ -25,7 +25,7 @@ class IrActionsReport(models.Model):
             return super(IrActionsReport, self).render_qweb_pdf(
                 res_ids, data=data)
 
-        nfe = self.env['invoice.eletronic'].search([('id', 'in', res_ids)])
+        nfe = self.env['invoice.eletronic'].sudo().search([('id', 'in', res_ids)])
 
         nfe_xml = base64.decodestring(nfe.nfe_processada)
 
@@ -54,8 +54,9 @@ class IrActionsReport(models.Model):
         else:
             tmpLogo = False
 
-        timezone = pytz.timezone(self.env.context.get('tz')) or pytz.utc
-
+        tz = self.env.context.get('tz')        
+        timezone = tz if tz else pytz.utc
+        
         xml_element = etree.fromstring(nfe_xml)
         obj_danfe = danfe
         if nfe.model == '65':
