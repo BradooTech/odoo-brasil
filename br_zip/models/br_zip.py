@@ -152,7 +152,7 @@ class BrZip(models.Model):
         if len(zip_ids) == 1:
             return self.set_result(zip_ids[0])
         else:
-            raise UserError(_(u'Nenhum CEP encontrado'))
+            self.env.user.notify_warning(_(u'Nenhum CEP encontrado'))
 
     @api.multi
     def seach_by_address(self, obj, country_id=False, state_id=False,
