@@ -3,7 +3,7 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-
+from lxml import etree
 from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
 from odoo.addons.br_account.models.cst import CST_ICMS
@@ -27,6 +27,9 @@ class AccountInvoiceLine(models.Model):
     def _prepare_tax_context(self):
         return {
             'incluir_ipi_base': self.incluir_ipi_base,
+            'incluir_ii_base': self.incluir_ii_base,
+            'incluir_pis_base': self.incluir_pis_base,
+            'incluir_cofins_base': self.incluir_cofins_base,
             'icms_st_aliquota_mva': self.icms_st_aliquota_mva,
             'icms_aliquota_reducao_base': self.icms_aliquota_reducao_base,
             'icms_st_aliquota_reducao_base':
@@ -44,7 +47,8 @@ class AccountInvoiceLine(models.Model):
             'cofins_base_calculo_manual': self.cofins_base_calculo_manual,
             'ii_base_calculo': self.ii_base_calculo,
             'issqn_base_calculo': self.issqn_base_calculo,
-            'icms_aliquota_inter_part': self.icms_aliquota_inter_part
+            'icms_aliquota_inter_part': self.icms_aliquota_inter_part,
+            'l10n_br_issqn_deduction': self.l10n_br_issqn_deduction,
         }
 
     @api.one
@@ -55,14 +59,15 @@ class AccountInvoiceLine(models.Model):
                  'tax_icms_intra_id', 'tax_icms_fcp_id', 'tax_ipi_id',
                  'tax_pis_id', 'tax_cofins_id', 'tax_ii_id', 'tax_issqn_id',
                  'tax_csll_id', 'tax_irrf_id', 'tax_inss_id',
-                 'incluir_ipi_base', 'tem_difal', 'icms_aliquota_reducao_base',
+                 'incluir_ipi_base', 'incluir_ii_base', 'incluir_pis_base', 
+                 'incluir_cofins_base', 'tem_difal', 'icms_aliquota_reducao_base',
                  'ipi_reducao_bc', 'icms_st_aliquota_mva',
                  'icms_st_aliquota_reducao_base', 'icms_aliquota_credito',
                  'icms_st_aliquota_deducao', 'icms_st_base_calculo_manual',
                  'icms_base_calculo_manual', 'ipi_base_calculo_manual',
                  'pis_base_calculo_manual', 'cofins_base_calculo_manual',
                  'icms_st_aliquota_deducao', 'ii_base_calculo',
-                 'icms_aliquota_inter_part')
+                 'icms_aliquota_inter_part', 'l10n_br_issqn_deduction')
     def _compute_price(self):
         currency = self.invoice_id and self.invoice_id.currency_id or None
         price = self.price_unit * (1 - (self.discount or 0.0) / 100.0)
@@ -70,7 +75,6 @@ class AccountInvoiceLine(models.Model):
         valor_bruto = self.price_unit * self.quantity
         desconto = valor_bruto * self.discount / 100.0
         subtotal = valor_bruto - desconto
-
         taxes = False
         self._update_invoice_line_ids()
         if self.invoice_line_tax_ids:
@@ -118,6 +122,19 @@ class AccountInvoiceLine(models.Model):
                 price_subtotal_signed, self.invoice_id.company_id.currency_id)
         sign = self.invoice_id.type in ['in_refund', 'out_refund'] and -1 or 1
 
+        if self.icms_aliquota_credito:
+            # Calcular o valor da base_icms para o calculo de
+            # credito de ICMS
+            ctx = self._prepare_tax_context()
+            valor_frete = ctx.get('valor_frete', 0.0)
+            valor_seguro = ctx.get('valor_seguro', 0.0)
+            outras_despesas = ctx.get('outras_despesas', 0.0)
+
+            base_icms_credito = subtotal + valor_frete \
+                + valor_seguro + outras_despesas
+        else:
+            base_icms_credito = 0.0
+
         price_subtotal_signed = price_subtotal_signed * sign
         self.update({
             'price_total': taxes['total_included'] if taxes else subtotal,
@@ -135,7 +152,7 @@ class AccountInvoiceLine(models.Model):
             'icms_uf_remet': sum([x['amount'] for x in icms_inter]),
             'icms_uf_dest': sum([x['amount'] for x in icms_intra]),
             'icms_fcp_uf_dest': sum([x['amount'] for x in icms_fcp]),
-            'icms_valor_credito': sum([x['base'] for x in icms]) *
+            'icms_valor_credito': base_icms_credito *
             (self.icms_aliquota_credito / 100),
             'ipi_base_calculo': sum([x['base'] for x in ipi]),
             'ipi_valor': sum([x['amount'] for x in ipi]),
@@ -160,7 +177,7 @@ class AccountInvoiceLine(models.Model):
     def _compute_cst_icms(self):
         for item in self:
             item.icms_cst = item.icms_cst_normal \
-                if item.company_fiscal_type == '3' else item.icms_csosn_simples
+                if item.company_fiscal_type != '1' else item.icms_csosn_simples
 
     price_tax = fields.Float(
         compute='_compute_price', string='Impostos', store=True,
@@ -219,6 +236,15 @@ class AccountInvoiceLine(models.Model):
     incluir_ipi_base = fields.Boolean(
         string="Incl. Valor IPI?",
         help=u"Se marcado o valor do IPI inclui a base de cálculo")
+    incluir_ii_base = fields.Boolean(
+        string="Incl. Valor II?",
+        help=u"Se marcado o valor do II inclui a base de cálculo")
+    incluir_pis_base = fields.Boolean(
+        string="Incl. Valor PIS?",
+        help=u"Se marcado o valor do PIS inclui a base de cálculo")
+    incluir_cofins_base = fields.Boolean(
+        string="Incl. Valor COFINS?",
+        help=u"Se marcado o valor do COFINS inclui a base de cálculo")
     icms_base_calculo = fields.Float(
         'Base ICMS', required=True, compute='_compute_price', store=True,
         digits=dp.get_precision('Account'), default=0.00)
@@ -330,6 +356,9 @@ class AccountInvoiceLine(models.Model):
     issqn_valor = fields.Float(
         'Valor ISSQN', required=True, digits=dp.get_precision('Account'),
         default=0.00, compute='_compute_price', store=True)
+    l10n_br_issqn_deduction = fields.Float(
+        '% Dedução Base ISSQN', digits=dp.get_precision('Discount'),
+        default=0.00, store=True)
 
     # =========================================================================
     # IPI
@@ -628,3 +657,20 @@ class AccountInvoiceLine(models.Model):
         if self.tax_inss_id:
             self.inss_aliquota = self.tax_inss_id.amount
         self._update_invoice_line_ids()
+
+    @api.model
+    def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
+        res = super(AccountInvoiceLine, self).fields_view_get(
+            view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        if self._context.get('type'):
+            doc = etree.XML(res['arch'])
+            for node in doc.xpath("//field[@name='product_id']"):
+                if self._context['type'] in ('in_invoice', 'in_refund'):
+                    # Hack to fix the stable version 8.0 -> saas-12
+                    # purchase_ok will be moved from purchase to product in master #13271
+                    if 'purchase_ok' in self.env['product.template']._fields:
+                        node.set('domain', "[('purchase_ok', '=', True)]")
+                else:
+                    node.set('domain', "[(1,'=',1)]")
+            res['arch'] = etree.tostring(doc, encoding='unicode')
+        return res

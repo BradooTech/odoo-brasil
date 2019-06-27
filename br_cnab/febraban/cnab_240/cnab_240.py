@@ -92,7 +92,8 @@ class Cnab240(Cnab):
             'arquivo_codigo': 1,  # Remessa/Retorno
             'servico_operacao': u'R',
             'nome_banco': str(self.order.payment_mode_id.bank_account_id
-                              .bank_name)
+                              .bank_name),
+            'controlecob_numero' : self.order.file_number,
         }
 
     def get_file_numeration(self):
@@ -145,6 +146,14 @@ class Cnab240(Cnab):
         # Dígito verificador de agencia e conta
         # Era cedente_agencia_conta_dv agora é cedente_dv_ag_cc
 
+
+        #tratamento para o aceite diferenciado (pq o itau quer fazer tudo diferente) do itau
+        aceite = self.order.payment_mode_id.boleto_aceite
+        #print('\n\nVALOR DO ACEITW:::::::',aceite,self.order.payment_mode_id.boleto_type)
+
+        if self.order.payment_mode_id.boleto_type == '6' :
+            if aceite=='S' : aceite='A'
+        
         return {
             'controle_banco': int(self.order.payment_mode_id.bank_account_id.
                                   bank_bic),
@@ -174,7 +183,7 @@ class Cnab240(Cnab):
             # TODO: Código adotado para identificar o título de cobrança.
             # 8 é Nota de cŕedito comercial
             'especie_titulo': int(self.order.payment_mode_id.boleto_especie),
-            'aceite_titulo': self.order.payment_mode_id.boleto_aceite,
+            'aceite_titulo': aceite,
             'data_emissao_titulo': self.format_date(
                 line.date),
             # Taxa de juros do Odoo padrão mensal: 2. Campo 27.3P
@@ -189,7 +198,7 @@ class Cnab240(Cnab):
             'codigo_multa': '2',
             'data_multa': self.format_date(
                 line.date_maturity),
-            'juros_multa':  Decimal(
+            'juros_multa': Decimal(
                 str(self.order.payment_mode_id.late_payment_fee)).quantize(
                     Decimal('1.00')),
             # TODO Remover taxa dia - deixar apenas taxa normal
@@ -219,7 +228,6 @@ class Cnab240(Cnab):
 
     def remessa(self, order):
         cobrancasimples_valor_titulos = 0
-
         self.order = order
         header = self._prepare_header()
         self.arquivo = Arquivo(self.bank, **header)
@@ -232,7 +240,6 @@ class Cnab240(Cnab):
             self.arquivo.lotes[0].trailer.cobrancasimples_valor_titulos = \
                 Decimal(cobrancasimples_valor_titulos).quantize(
                     Decimal('1.00'))
-
         return str(self.arquivo)
 
     def data_hoje(self):

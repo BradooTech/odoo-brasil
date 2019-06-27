@@ -40,6 +40,7 @@ class AccountBankStatementImport(models.TransientModel):
 
     def _check_cnab(self, data_file, raise_error=False):
         try:
+            
             cnab240_file = tempfile.NamedTemporaryFile()
             cnab240_file.write(data_file)
             cnab240_file.flush()
@@ -49,7 +50,9 @@ class AccountBankStatementImport(models.TransientModel):
                 journal_id = self.journal_id.id
 
             bank = self.get_bank(journal_id)
+
             Arquivo(bank, arquivo=open(cnab240_file.name, 'r'))
+            
             return True
         except Exception as e:
             if raise_error:
@@ -65,8 +68,8 @@ class AccountBankStatementImport(models.TransientModel):
             return int(nosso_numero[8:19])
         elif bank == '756':
             return int(nosso_numero[:9])
-        elif bank == '033':
-            return int(nosso_numero[:-1])
+        elif bank == '033':  # Santander
+            return int(str(nosso_numero)[:-1])
         elif bank == '748':
             return int(nosso_numero[:-1])
         elif bank == '001':
@@ -88,8 +91,8 @@ class AccountBankStatementImport(models.TransientModel):
             from cnab240.bancos import cecred
             return cecred
         elif bank == '341':
-            from cnab240.bancos import itau
-            return itau
+            from cnab240.bancos import itauRetorno
+            return itauRetorno
         elif bank == '033':
             from cnab240.bancos import santander
             return santander
@@ -114,7 +117,7 @@ class AccountBankStatementImport(models.TransientModel):
             except Exception as ex :
                 raise UserError(ex)
         else:
-            return None
+            return codigo
 
     def _parse_cnab(self, data_file, raise_error=False):
         cnab240_file = tempfile.NamedTemporaryFile()
@@ -127,19 +130,27 @@ class AccountBankStatementImport(models.TransientModel):
 
         bank = self.get_bank(journal_id)
         arquivo = Arquivo(bank, arquivo=open(cnab240_file.name, 'r'))
+        
+        codigo_busca = None
+        if arquivo.header.nome_do_banco == 'santander':
+            codigo_busca = arquivo.header.codigo_transmissao
+        else :
+            codigo_busca = str(int(arquivo.header.cedente_conta))
+           
         transacoes = []
         valor_total = Decimal('0.0')
         
-        conta_cnab = self.get_account(journal_id,arquivo.header.codigo_transmissao)
-        conta_diario = self.journal_id.bank_account_id.sanitized_acc_number
+        conta_cnab = self.get_account(journal_id,codigo_busca)
+        conta_diario = str(int(self.journal_id.bank_account_id.sanitized_acc_number))
+
 
         if not conta_diario == False :   
             if not conta_cnab ==  conta_diario :
                 raise UserError('A conta do arquivo(' + str(conta_cnab) + ') não corresponde a conta informada (' + str(conta_diario) + ')'  )
-                
+        
         for lote in arquivo.lotes:
             for evento in lote.eventos:
-                valor = evento.valor_lancamento
+                valor = evento.titulo_pago
                 # Apenas liquidação  (Sicoob:6)
                 # Liquidação Banco do Brasil (6, 17)
                 # Liquidação Bradesco (6, 177)
@@ -170,6 +181,7 @@ class AccountBankStatementImport(models.TransientModel):
                         'nosso_numero': nosso_numero,
                     })
 
+              
         inicio = final = datetime.now()
         if len(transacoes):
             primeira_transacao = min(transacoes, key=lambda x: x["date"])

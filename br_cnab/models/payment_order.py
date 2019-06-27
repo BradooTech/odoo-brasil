@@ -2,7 +2,6 @@
 # © 2016 Alessandro Fernandes Martini, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-import time
 import base64
 from ..febraban.cnab import Cnab
 from datetime import datetime
@@ -22,16 +21,20 @@ class PaymentOrder(models.Model):
         if len(self.line_ids) < 1:
             raise UserError(
                 u'Ordem de Cobrança não possui Linhas de Cobrança!')
+
+        if not self.payment_mode_id.file_number_sequence:
+            raise UserError(
+                'Sequencia de numero de arquivo não definido'
+            )
         self.data_emissao_cnab = datetime.now()
-        self.file_number = self.env['ir.sequence'].next_by_code('cnab.nsa')
+        self.file_number = self.payment_mode_id.file_number_sequence.next_by_id()
         for order_id in self:
             order = self.env['payment.order'].browse(order_id.id)
             cnab = Cnab.get_cnab(
                 order.payment_mode_id.bank_account_id.bank_bic, '240')()
             remessa = cnab.remessa(order)
 
-            self.name = 'CNAB%s%s.REM' % (
-                time.strftime('%d%m'), str(order.file_number))
+            self.name = self.env['ir.sequence'].next_by_code('seq.boleto.name')
             self.state = 'done'
             self.cnab_file = base64.b64encode(remessa.encode('UTF-8'))
 

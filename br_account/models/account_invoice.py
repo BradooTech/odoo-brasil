@@ -107,14 +107,6 @@ class AccountInvoice(models.Model):
         'account.move.line', string='Payable Move Lines',
         compute='_compute_payables')
 
-    vendor_number = fields.Char(
-        u'Número NF Entrada', size=18, readonly=True,
-        states={'draft': [('readonly', False)]},
-        help=u"Número da Nota Fiscal do Fornecedor")
-    vendor_serie = fields.Char(
-        u'Série NF Entrada', size=12, readonly=True,
-        states={'draft': [('readonly', False)]},
-        help=u"Série do número da Nota Fiscal do Fornecedor")
     product_serie_id = fields.Many2one(
         'br_account.document.serie', string=u'Série produtos',
         domain="[('fiscal_document_id', '=', product_document_id),\
@@ -298,7 +290,7 @@ class AccountInvoice(models.Model):
         for line in self.invoice_line_ids:
             if line.quantity == 0:
                 continue
-            res[contador]['price'] = line.price_unit
+            res[contador]['price'] = line.price_total
 
             price = line.price_unit * (1 - (
                 line.discount or 0.0) / 100.0)
@@ -309,7 +301,6 @@ class AccountInvoice(models.Model):
             taxes_dict = tax_ids.compute_all(
                 price, self.currency_id, line.quantity,
                 product=line.product_id, partner=self.partner_id)
-
             for tax in line.invoice_line_tax_ids:
                 tax_dict = next(
                     x for x in taxes_dict['taxes'] if x['id'] == tax.id)
@@ -406,23 +397,3 @@ class AccountInvoice(models.Model):
         res['service_document_id'] = invoice.service_document_id.id
         res['service_serie_id'] = invoice.service_serie_id.id
         return res
-
-    @api.multi
-    def action_invoice_open(self):
-        res = super(AccountInvoice, self).action_invoice_open()
-
-        if self.service_document_id.code in ['001','002','003','004','005','006','007','991']:
-            validation = self.env['ir.module.module'].search([("name", "=", "br_nfse")])
-            if validation.state != 'installed':
-                raise UserError (u"Módulo de Envio de NFS-e não instalado. \
-                    Por favor contate o Adminstrador!")
-        elif self.product_document_id.code in ['55','65']:
-            validation = self.env['ir.module.module'].search([("name", "=", "br_nfe")])
-            if validation.state != 'installed':
-                raise UserError (u"Módulo de Envio de NF-e não instalado. \
-                    Por favor contate o Adminstrador!")
-        return res
-    '''
-    Metodo de validacao do invoice no caso do modulo necessario para a criacao
-    da Nota Fiscal nao esteja instalado.
-    '''

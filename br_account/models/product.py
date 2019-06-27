@@ -30,8 +30,10 @@ class ProductTemplate(models.Model):
 
     @api.onchange('type')
     def onchange_product_type(self):
-        self.fiscal_type = 'service' if self.type == 'service' else 'product'
+        if self.type == 'service':
+            self.fiscal_type = 'service' 
 
     @api.onchange('fiscal_type')
     def onchange_product_fiscal_type(self):
-        self.type = 'service' if self.fiscal_type == 'service' else 'consu'
+        if self.fiscal_type == 'service':
+            self.type = 'service' 

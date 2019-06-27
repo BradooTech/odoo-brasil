@@ -17,6 +17,9 @@
     ],
     'depends': [
         'br_account_einvoice',
+        'br_stock_account',
+        'br_account_payment',
+        'br_delivery',
     ],
     'external_dependencies': {
         'python': [
@@ -34,6 +37,7 @@
         'views/invoice_eletronic_item.xml',
         'views/inutilized_nfe.xml',
         'views/br_nfe.xml',
+        'views/payment_mode.xml',
         'reports/danfe_report.xml',
         'wizard/cancel_nfe.xml',
         'wizard/carta_correcao_eletronica.xml',

@@ -13,6 +13,7 @@
                 <group name="boletos" string="Boletos">
                     <field name="boleto_type"/>
                     <field name="nosso_numero_sequence"/>
+                    <field name="file_number_sequence"/>
                     <field name="boleto_carteira"/>
                     <field name="boleto_modalidade"/>
                     <field name="boleto_variacao"/>

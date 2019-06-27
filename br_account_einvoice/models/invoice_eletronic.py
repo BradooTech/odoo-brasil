@@ -20,6 +20,12 @@ from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 
 STATE = {'edit': [('readonly', False)]}
 
+EDOCUMENT_STATE = {
+    'draft': [('readonly', False)],
+    'edit': [('readonly', False)],
+    'error': [('readonly', False)],
+}
+
 
 class InvoiceEletronic(models.Model):
     _name = 'invoice.eletronic'
@@ -51,14 +57,19 @@ class InvoiceEletronic(models.Model):
          ('008', u'NFS-e - Provedor SIMPLISS'),
          ('009', u'NFS-e - Provedor SUSESU'),
          ('010', u'NFS-e Imperial - Petrópolis'),
-         ('012', u'NFS-e - Florianópolis')],
+         ('012', u'NFS-e - Florianópolis'),
+         ('015', u'NFS-e - Maringá')],
         string=u'Modelo', readonly=True, states=STATE)
     serie = fields.Many2one(
         'br_account.document.serie', string=u'Série',
         readonly=True, states=STATE)
-    serie_documento = fields.Char(string=u'Série Documento', size=6)
+    serie_documento = fields.Char(
+        string='Série Documento', 
+        readonly=True, 
+        states=EDOCUMENT_STATE, 
+        size=6)
     numero = fields.Integer(
-        string=u'Número', readonly=True, states=STATE)
+        string=u'Número', readonly=True, states=EDOCUMENT_STATE)
     numero_controle = fields.Integer(
         string=u'Número de Controle', readonly=True, states=STATE)
     data_emissao = fields.Datetime(
@@ -88,7 +99,7 @@ class InvoiceEletronic(models.Model):
     partner_shipping_id = fields.Many2one(
         'res.partner', string=u'Entrega', readonly=True, states=STATE)
     payment_term_id = fields.Many2one(
-        'account.payment.term', string=u'Forma pagamento',
+        'account.payment.term', string='Condição pagamento',
         readonly=True, states=STATE)
     fiscal_position_id = fields.Many2one(
         'account.fiscal.position', string=u'Posição Fiscal',
@@ -187,6 +198,16 @@ class InvoiceEletronic(models.Model):
     email_sent = fields.Boolean(string=u"Email enviado", default=False,
                                 readonly=True, states=STATE)
 
+    @api.multi
+    def write(self, vals):
+        res = super(InvoiceEletronic, self).write(vals)
+
+        number = vals.get('numero')
+        if number and isinstance(number, int):
+            self.serie.number_next_actual = number + 1
+
+        return res
+
     def _create_attachment(self, prefix, event, data):
         file_name = '%s-%s.xml' % (
             prefix, datetime.now().strftime('%Y-%m-%d-%H-%M'))
@@ -248,7 +269,17 @@ class InvoiceEletronic(models.Model):
             if not self.company_id.partner_id.country_id.bc_code:
                 errors.append(u'Emitente / Endereço - Código do BC do país')
 
+        # produtos
+        for eletr in self.eletronic_item_ids:
+            if eletr.product_id:
+                if not eletr.product_id.default_code:
+                    errors.append(
+                        u'Prod: %s - Código do produto' % (
+                            eletr.product_id.name))
+
         partner = self.partner_id.commercial_partner_id
+        if not partner:  # NFC-e pode não ter partner, mas se tiver valida
+            return errors
         company = self.company_id
         # Destinatário
         if partner.is_company and not partner.legal_name:
@@ -297,14 +328,6 @@ class InvoiceEletronic(models.Model):
                 errors.append(u'Destinatário / Endereço - Nome do país')
             if not partner.country_id.bc_code:
                 errors.append(u'Destinatário / Endereço - Cód. do BC do país')
-
-        # produtos
-        for eletr in self.eletronic_item_ids:
-            if eletr.product_id:
-                if not eletr.product_id.default_code:
-                    errors.append(
-                        u'Prod: %s - Código do produto' % (
-                            eletr.product_id.name))
         return errors
 
     @api.multi
@@ -430,7 +453,20 @@ class InvoiceEletronic(models.Model):
 
     def log_exception(self, exc):
         self.codigo_retorno = -1
-        self.mensagem_retorno = exc.message
+        self.mensagem_retorno = str(exc)
+
+    def notify_user(self):
+        redirect = {
+            'name': 'Invoices',
+            'model': 'account.invoice',
+            'view': 'form',
+            'domain': [['id', '=', self.invoice_id.id]],
+            'context': {}
+        }
+        msg = 'Verifique a %s, ocorreu um problema com o envio de \
+        documento eletrônico!' % self.name
+        self.create_uid.notify(msg, sticky=True, title="Ação necessária!",
+                               warning=True, redirect=redirect)
 
     def _get_state_to_send(self):
         return ('draft',)
@@ -446,6 +482,7 @@ class InvoiceEletronic(models.Model):
                 item.action_send_eletronic_invoice()
             except Exception as e:
                 item.log_exception(e)
+                item.notify_user()
 
     def _find_attachment_ids_email(self):
         return []
@@ -492,7 +529,7 @@ class InvoiceEletronicEvent(models.Model):
 class InvoiceEletronicItem(models.Model):
     _name = 'invoice.eletronic.item'
 
-    name = fields.Char(u'Nome', size=100, readonly=True, states=STATE)
+    name = fields.Text(u'Nome', readonly=True, states=STATE)
     company_id = fields.Many2one(
         'res.company', u'Empresa', index=True, readonly=True, states=STATE)
     invoice_eletronic_id = fields.Many2one(
