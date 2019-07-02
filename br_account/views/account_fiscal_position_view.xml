@@ -32,6 +32,8 @@
                     </group>
                     <group>
                         <field name="incluir_ipi_base" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
+                        <field name="habilita_desoneracao" attrs="{'invisible': [('domain', '!=', 'icms')]}"/>
+                        <field name="motivo_icms_desoneracao" attrs="{'invisible': [('domain', '!=', 'icms')]}"/>
                         <field name="icms_aliquota_credito" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
                         <field name="reducao_icms" attrs="{'invisible': [('cst_icms', 'not in', ('20', '70', '90'))]}" />
                         <field name="aliquota_mva" attrs="{'invisible': [('cst_icms', 'not in', ('10', '30', '70', '90')), ('csosn_icms', 'not in', ('201', '202', '203', '900'))]}" />
