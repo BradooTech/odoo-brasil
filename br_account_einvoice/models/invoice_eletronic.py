@@ -297,7 +297,7 @@ class InvoiceEletronic(models.Model):
             errors.append(u'Destinatário - Razão Social')
 
         # Validação do model NFSe Tecnospeed, para permitir emissão sem informações do partner
-+       if self.model != '991':
+        if self.model != '991':
             if partner.country_id.id == company.partner_id.country_id.id:
                 if not partner.cnpj_cpf:
                     errors.append(u'Destinatário - CNPJ/CPF')
