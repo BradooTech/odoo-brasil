@@ -296,49 +296,52 @@ class InvoiceEletronic(models.Model):
         if partner.is_company and not partner.legal_name:
             errors.append(u'Destinatário - Razão Social')
 
-        if partner.country_id.id == company.partner_id.country_id.id:
-            if not partner.cnpj_cpf:
-                errors.append(u'Destinatário - CNPJ/CPF')
+        # Validação do model NFSe Tecnospeed, para permitir emissão sem informações do partner
++       if self.model != '991':
+            if partner.country_id.id == company.partner_id.country_id.id:
+                if not partner.cnpj_cpf:
+                    errors.append(u'Destinatário - CNPJ/CPF')
 
-        if not partner.street:
-            errors.append(u'Destinatário / Endereço - Logradouro')
+            if not partner.street:
+                errors.append(u'Destinatário / Endereço - Logradouro')
 
-        if not partner.number:
-            errors.append(u'Destinatário / Endereço - Número')
+            if not partner.number:
+                errors.append(u'Destinatário / Endereço - Número')
 
-        if partner.country_id.id == company.partner_id.country_id.id:
-            if not partner.zip or len(
-                    re.sub(r"\D", "", partner.zip)) != 8:
-                errors.append(u'Destinatário / Endereço - CEP')
+            if partner.country_id.id == company.partner_id.country_id.id:
+                if not partner.zip or len(
+                        re.sub(r"\D", "", partner.zip)) != 8:
+                    errors.append(u'Destinatário / Endereço - CEP')
 
-        if partner.country_id.id == company.partner_id.country_id.id:
-            if not partner.state_id:
-                errors.append(u'Destinatário / Endereço - Estado')
+            if partner.country_id.id == company.partner_id.country_id.id:
+                if not partner.state_id:
+                    errors.append(u'Destinatário / Endereço - Estado')
+                else:
+                    if not partner.state_id.ibge_code:
+                        errors.append(u'Destinatário / Endereço - Código do IBGE \
+                                    do estado')
+                    if not partner.state_id.name:
+                        errors.append(u'Destinatário / Endereço - Nome do estado')
+
+            if partner.country_id.id == company.partner_id.country_id.id:
+                if not partner.city_id:
+                    errors.append(u'Destinatário / Endereço - Município')
+                else:
+                    if not partner.city_id.name:
+                        errors.append(u'Destinatário / Endereço - Nome do \
+                                    município')
+                    if not partner.city_id.ibge_code:
+                        errors.append(u'Destinatário / Endereço - Código do IBGE \
+                                    do município')
+
+            if not partner.country_id:
+                errors.append(u'Destinatário / Endereço - País')
             else:
-                if not partner.state_id.ibge_code:
-                    errors.append(u'Destinatário / Endereço - Código do IBGE \
-                                  do estado')
-                if not partner.state_id.name:
-                    errors.append(u'Destinatário / Endereço - Nome do estado')
-
-        if partner.country_id.id == company.partner_id.country_id.id:
-            if not partner.city_id:
-                errors.append(u'Destinatário / Endereço - Município')
-            else:
-                if not partner.city_id.name:
-                    errors.append(u'Destinatário / Endereço - Nome do \
-                                  município')
-                if not partner.city_id.ibge_code:
-                    errors.append(u'Destinatário / Endereço - Código do IBGE \
-                                  do município')
-
-        if not partner.country_id:
-            errors.append(u'Destinatário / Endereço - País')
-        else:
-            if not partner.country_id.name:
-                errors.append(u'Destinatário / Endereço - Nome do país')
-            if not partner.country_id.bc_code:
-                errors.append(u'Destinatário / Endereço - Cód. do BC do país')
+                if not partner.country_id.name:
+                    errors.append(u'Destinatário / Endereço - Nome do país')
+                if not partner.country_id.bc_code:
+                    errors.append(u'Destinatário / Endereço - Cód. do BC do país')
+        
         return errors
 
     @api.multi
