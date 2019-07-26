@@ -663,7 +663,13 @@ class InvoiceEletronic(models.Model):
             percent_vr_aprox_trib = (self.valor_estimado_tributos / self.valor_final) * 100
             
             infAdic = {
-                'infCpl': self.informacoes_complementares + ' - ' +'Total de impostos estimados: ' + str(self.valor_estimado_tributos) + '(' + str("%.2f" % percent_vr_aprox_trib) + '%) - Fonte: IBPT',
+                'infCpl': (
+                    '%s - Total de impostos estimados: %s(%s%) - Fonte: IBPT' %
+                    (self.informacoes_complementares,
+                    self.valor_estimado_tributos,
+                    "%.2f" % percent_vr_aprox_trib)
+                    if self.valor_estimado_tributos else ''
+                ),
                 'infAdFisco': self.informacoes_legais or '',
             }
         else:
