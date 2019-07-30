@@ -320,7 +320,7 @@ class SaleOrderLine(models.Model):
                 self.price_subtotal * (service.municipal_imposto / 100)
         else:
             federal = ncm.federal_nacional if self.product_id.origin in \
-                ('1', '2', '3', '8') else ncm.federal_importado
+                ('0', '4') else ncm.federal_importado
 
             res['tributos_estimados_federais'] = \
                 self.price_subtotal * (federal / 100)
