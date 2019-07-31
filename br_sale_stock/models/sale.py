@@ -149,4 +149,24 @@ class SaleOrderLine(models.Model):
         res['outras_despesas'] = self.outras_despesas
         res['valor_frete'] = self.valor_frete * (round(
             res['quantity'] / self.product_uom_qty, 2))
+
+        if self.product_id.fiscal_type == 'product':
+            ncm = self.product_id.fiscal_classification_id
+            price = self.price_subtotal + self.valor_frete
+
+            federal = ncm.federal_nacional if self.product_id.origin in \
+                ('0', '4') else ncm.federal_importado
+
+            res['tributos_estimados_federais'] = price * (federal / 100)
+            res['tributos_estimados_estaduais'] = (
+                price * (ncm.estadual_imposto / 100))
+            res['tributos_estimados_municipais'] = (
+                price * (ncm.municipal_imposto / 100))
+
+            res['tributos_estimados'] = sum([
+                res['tributos_estimados_federais'], 
+                res['tributos_estimados_estaduais'],
+                res['tributos_estimados_municipais']
+            ])
+
         return res
