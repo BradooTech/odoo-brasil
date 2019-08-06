@@ -441,6 +441,11 @@ class InvoiceEletronic(models.Model):
         pass
 
     @api.multi
+    def action_resolve(self):
+        self.state = 'wait'
+        self.action_send_eletronic_invoice()
+
+    @api.multi
     def action_cancel_document(self, context=None, justificativa=None):
         pass
 
