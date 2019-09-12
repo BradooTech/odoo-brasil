@@ -11,7 +11,7 @@ class PaymentMode(models.Model):
     tipo_pagamento = fields.Selection(
         [('01', 'Dinheiro'),
          ('02', 'Cheque'),
-         ('03', 'Catão de Crédito'),
+         ('03', 'Cartão de Crédito'),
          ('04', 'Cartão de Débito'),
          ('05', 'Crédito Loja'),
          ('10', 'Vale Alimentação'),
@@ -19,6 +19,7 @@ class PaymentMode(models.Model):
          ('12', 'Vale Presente'),
          ('13', 'Vale Combustível'),
          ('14', 'Boleto'),
+         ('15', 'Boleto Bancário'),
          ('90', 'Sem pagamento'),
          ('99', 'Outros')],
-        string="Forma de Pagamento", default="14")
+        string="Forma de Pagamento", default="01")
