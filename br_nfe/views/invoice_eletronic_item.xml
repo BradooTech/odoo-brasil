@@ -28,8 +28,8 @@
             </group>
             <page name="ii" position="inside">
                 <group string="Declaração de Importação">
-                    <field name="import_declaration_ids" colspan="4" nolabel="1">
-                        <tree>
+                    <field name="import_declaration_ids" colspan="4" nolabel="1"/>
+                        <!-- <tree>
                             <field name="name"/>
                             <field name="date_registration"/>
                             <field name="location"/>
@@ -59,7 +59,7 @@
                                 </group>
                             </group>
                         </form>
-                    </field>
+                    </field> -->
                 </group>
             </page>
             <xpath expr="//form/notebook/page/group" position="after">
