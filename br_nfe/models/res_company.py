@@ -13,6 +13,11 @@ class ResCompany(models.Model):
             ('1', u'Produção'),
             ('2', u'Homologação')
         ], string="Ambiente NFe", default='2')
+    tipo_ambiente_nfce = fields.Selection(
+        [   
+            ('producao', 'Produção'),
+            ('homologacao', 'Homologação')
+        ], string='Ambiente NFCe', default='homologacao')
 
     cabecalho_danfe = fields.Selection(
         [
@@ -21,8 +26,8 @@ class ResCompany(models.Model):
         ], string=u"Cabeçalho Danfe", default='vertical')
 
     # NFC-e
-    id_token_csc = fields.Char(string="Identificador do CSC")
-    csc = fields.Char(string=u"Código de Segurança do Contribuinte")
+    id_token_nfce = fields.Char(string="Id Token NFCE")
+    token_nfce = fields.Char(string=u"Token NFCe")
     nfe_sinc = fields.Boolean(string="Aceita envio síncrono")
 
     # Responsavel Técnico

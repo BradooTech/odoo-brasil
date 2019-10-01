@@ -13,8 +13,8 @@
                 <page name="nfe_nfce" string="NF-e/NFC-e">
                     <group>
                         <group name="nfce" string="NFC-e">
-                            <field name="id_token_csc" />
-                            <field name="csc" />
+                            <field name="id_token_nfce" />
+                            <field name="token_nfce" />
                         </group>
                         <group name="nfe" string="NF-e">
                             <field name="cabecalho_danfe" />

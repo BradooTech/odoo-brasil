@@ -262,7 +262,6 @@ class InvoiceEletronic(models.Model):
                     errors.append(u'%s - CST do PIS' % prod)
                 if not eletr.cofins_cst:
                     errors.append(u'%s - CST do Cofins' % prod)
-
         # NF-e
         if self.model == '55':
             if not self.fiscal_position_id:
@@ -272,9 +271,9 @@ class InvoiceEletronic(models.Model):
                 errors.append(u'Emitente / CNPJ do escritório contabilidade')
         # NFC-e
         if self.model == '65':
-            if len(self.company_id.id_token_csc or '') != 6:
+            if len(self.company_id.id_token_nfce or '') != 6:
                 errors.append(u"Identificador do CSC inválido")
-            if not len(self.company_id.csc or ''):
+            if not len(self.company_id.token_nfce or ''):
                 errors.append(u"CSC Inválido")
             if self.partner_id.cnpj_cpf is None:
                 errors.append(u"CNPJ/CPF do Parceiro inválido")
@@ -324,7 +323,8 @@ class InvoiceEletronic(models.Model):
             'indTot': item.indicador_total,
             'cfop': item.cfop,
             'CEST': re.sub('[^0-9]', '', item.cest or ''),
-            'xPed': item.pedido_compra or invoice.pedido_compra or '',
+            'xPed': invoice.pedido_compra or '',
+            #'xPed': item.pedido_compra or invoice.pedido_compra or '',
             'nItemPed': item.item_pedido_compra or '',
         }
         di_vals = []
@@ -504,7 +504,7 @@ class InvoiceEletronic(models.Model):
             'tpAmb': 2 if self.ambiente == 'homologacao' else 1,
             'finNFe': self.finalidade_emissao,
             'indFinal': self.ind_final or '1',
-            'indPres': self.ind_pres or '1',
+            'indPres': '1',
             'procEmi': 0,
             'verProc': 'Odoo 11 - Trustcode',
         }
@@ -888,11 +888,11 @@ class InvoiceEletronic(models.Model):
             ambiente = 1 if self.ambiente == 'producao' else 2
             estado = self.company_id.state_id.ibge_code
 
-            cid_token = int(self.company_id.id_token_csc)
-            csc = self.company_id.csc
+            cid_token = int(self.company_id.id_token_nfce)
+            token_nfce = self.company_id.token_nfce
 
             c_hash_QR_code = "{0}|2|{1}|{2}{3}".format(
-                chave_nfe, ambiente, int(cid_token), csc)
+                chave_nfe, ambiente, int(cid_token), token_nfce)
             c_hash_QR_code = hashlib.sha1(c_hash_QR_code.encode()).hexdigest()
 
             QR_code_url = "p={0}|2|{1}|{2}|{3}".format(
