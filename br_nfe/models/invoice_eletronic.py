@@ -334,7 +334,7 @@ class InvoiceEletronic(models.Model):
                 'pCredSN': "%.02f" % item.icms_aliquota_credito,
                 'vCredICMSSN': "%.02f" % item.icms_valor_credito,
                 'vICMSDeson' : "%.02f" % item.valor_icms_desoneracao,
-                'motDesICMS': item.motivo_icms_desoneracao if item.motivo_icms_desoneracao else False,
+                **({'motDesICMS': item.motivo_icms_desoneracao} if item.motivo_icms_desoneracao else {}),
             },
             'IPI': {
                 'clEnq': item.classe_enquadramento_ipi or '',
