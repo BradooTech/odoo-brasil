@@ -63,6 +63,9 @@ class InvoiceEletronic(models.Model):
     ambiente_nfe = fields.Selection(
         string=u"Ambiente NFe", related="company_id.tipo_ambiente",
         readonly=True)
+    ambiente_nfce = fields.Selection(
+        string=u"Ambiente NFCe", related="company_id.tipo_ambiente_nfce",
+        readonly=True)
     ind_final = fields.Selection([
         ('0', u'Não'),
         ('1', u'Sim')
@@ -205,7 +208,7 @@ class InvoiceEletronic(models.Model):
          ('90', 'Sem pagamento'),
          ('99', 'Outros')],
         string="Forma de Pagamento", default="01")
-    valor_pago = fields.Monetary(string='Valor pago')
+    amount_full_paid = fields.Monetary(string='Valor pago')
     troco = fields.Monetary(string='Troco')
 
 
@@ -881,7 +884,7 @@ class InvoiceEletronic(models.Model):
 
         if self.model == '65':
             vals['pag'][0]['tPag'] = self.metodo_pagamento
-            vals['pag'][0]['vPag'] = "%.02f" % self.valor_pago
+            vals['pag'][0]['vPag'] = "%.02f" % self.amount_full_paid
             vals['pag'][0]['vTroco'] = "%.02f" % self.troco or '0.00'
 
             chave_nfe = self.chave_nfe
@@ -900,6 +903,7 @@ class InvoiceEletronic(models.Model):
             qr_code_server = url_qrcode(estado, str(ambiente))
             vals['qrCode'] = qr_code_server + QR_code_url
             vals['urlChave'] = url_qrcode_exibicao(estado, str(ambiente))
+
         return vals
 
     @api.multi

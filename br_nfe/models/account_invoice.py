@@ -35,9 +35,39 @@ class AccountInvoice(models.Model):
         string=u"Número NFe", compute="_compute_nfe_number")
     nfe_exception_number = fields.Integer(
         string=u"Número NFe", compute="_compute_nfe_number")
+    
+    ambiente_nfce = fields.Selection(
+        string="Ambiente NFCe", related="company_id.tipo_ambiente_nfce",
+        readonly=True)
+
     import_declaration_ids = fields.One2many(
         'br_account.import.declaration', 'invoice_eletronic_line_id')
 
+    payment_mode = fields.Selection(
+        [('01', 'Dinheiro'),
+         ('02', 'Cheque'),
+         ('03', 'Cartão de Crédito'),
+         ('04', 'Cartão de Débito'),
+         ('05', 'Crédito Loja'),
+         ('10', 'Vale Alimentação'),
+         ('11', 'Vale Refeição'),
+         ('12', 'Vale Presente'),
+         ('13', 'Vale Combustível'),
+         ('15', 'Boleto Bancário'),
+         ('90', 'Sem pagamento'),
+         ('99', 'Outros')], 
+         default='01', string="Método de Pagamento")
+    amount_full_paid = fields.Float(string="Valor total pago")
+
+    @api.multi
+    def action_invoice_open(self):
+        if self.invoice_model == '65' and self.payment_mode == '01':
+            print("entrou primeiro if")
+            if self.amount_full_paid < self.amount_total:
+                raise UserError("Para NFCe com pagamento em dinheiro, o valor pago deve ser maior ou igual ao valor total.")
+        
+        return super(AccountInvoice, self).action_invoice_open()
+    
     @api.multi
     def action_invoice_draft(self):
         for item in self:
@@ -118,9 +148,12 @@ class AccountInvoice(models.Model):
         res['numero_nfe'] = numero_nfe
         res['numero'] = numero_nfe
         res['name'] = 'Documento Eletrônico: nº %s' % numero_nfe
-        res['ambiente'] = 'homologacao' \
-            if inv.company_id.tipo_ambiente == '2' else 'producao'
-
+        
+        # Validação de ambiente NFe e NFCe, agora em campos distintos
+        if serie_id.fiscal_document_id.code == '55':
+            res['ambiente'] = 'homologacao' if inv.company_id.tipo_ambiente == '2' else 'producao'
+        else:
+            res['ambiente'] = inv.company_id.tipo_ambiente_nfce
         # Indicador Consumidor Final
         if inv.commercial_partner_id.is_company:
             res['ind_final'] = '0'
@@ -186,9 +219,9 @@ class AccountInvoice(models.Model):
         res['fiscal_document_related_ids'] = documentos
 
         # NFC-e
-        res['troco'] = 0.0
-        res['metodo_pagamento'] = inv.payment_mode_id.tipo_pagamento or '01'
-        res['valor_pago'] = inv.amount_total
+        res['metodo_pagamento'] = inv.payment_mode
+        res['amount_full_paid'] = inv.amount_full_paid
+        res['troco'] = inv.amount_full_paid - inv.amount_total if inv.payment_mode == '01' else 0.0
 
         return res
 

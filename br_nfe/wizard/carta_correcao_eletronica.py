@@ -64,17 +64,22 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
         dt_evento = datetime.utcnow()
         dt_evento = pytz.utc.localize(dt_evento).astimezone(tz)
 
+        if self.eletronic_doc_id.model == '55':
+            ambiente = int(self.eletronic_doc_id.company_id.tipo_ambiente)
+        else:
+            ambiente = self.eletronic_doc_id.company_id.tipo_ambiente_nfce
+
         carta = {
             'idLote': self.id,
             'estado':  self.eletronic_doc_id.company_id.state_id.ibge_code,
-            'ambiente': int(self.eletronic_doc_id.company_id.tipo_ambiente),
+            'ambiente': ambiente,
             'modelo': self.eletronic_doc_id.model,
             'eventos': [{
                 'invoice_id': self.eletronic_doc_id.id,
                 'CNPJ': re.sub(
                     "[^0-9]", "", self.eletronic_doc_id.company_id.cnpj_cpf),
                 'cOrgao':  self.eletronic_doc_id.company_id.state_id.ibge_code,
-                'tpAmb': self.eletronic_doc_id.company_id.tipo_ambiente,
+                'tpAmb': ambiente,
                 'dhEvento':  dt_evento.strftime('%Y-%m-%dT%H:%M:%S-03:00'),
                 'chNFe': self.eletronic_doc_id.chave_nfe,
                 'xCorrecao': self.correcao,

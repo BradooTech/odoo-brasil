@@ -92,7 +92,7 @@ class InutilizedNfe(models.Model):
             raise UserError('\n'.join(errors))
         return True
 
-    def _prepare_obj(self, company, estado, ambiente):
+    def _prepare_obj(self, company, estado):
         ano = str(datetime.now().year)[2:]
         serie = self.serie.code
         cnpj = re.sub(r'\D', '', company.cnpj_cpf)
@@ -101,6 +101,12 @@ class InutilizedNfe(models.Model):
         ID = ID.format(estado=estado, ano=ano, cnpj=cnpj, modelo=self.modelo,
                        serie=int(serie), num_inicial=self.numeration_start,
                        num_final=self.numeration_end)
+        
+        if serie == '55':
+            ambiente = company.tipo_ambiente
+        else:
+            ambiente = company.tipo_ambiente_nfce
+
         return {
             'id': ID,
             'ambiente': ambiente,
@@ -152,11 +158,9 @@ class InutilizedNfe(models.Model):
 
     def send_sefaz(self):
         company = self.env.user.company_id
-        ambiente = company.tipo_ambiente
         estado = company.state_id.ibge_code
 
-        obj = self._prepare_obj(company=company, estado=estado,
-                                ambiente=ambiente)
+        obj = self._prepare_obj(company=company, estado=estado)
 
         cert = company.with_context({'bin_size': False}).nfe_a1_file
         cert_pfx = base64.decodestring(cert)

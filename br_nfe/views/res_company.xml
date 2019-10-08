@@ -13,16 +13,17 @@
                 <page name="nfe_nfce" string="NF-e/NFC-e">
                     <group>
                         <group name="nfce" string="NFC-e">
+                            <field name="tipo_ambiente_nfce"/>
                             <field name="id_token_nfce" />
                             <field name="token_nfce" />
                         </group>
                         <group name="nfe" string="NF-e">
+                            <field name="tipo_ambiente" />
                             <field name="cabecalho_danfe" />
                         </group>
                     </group>
                     <group name="general" string="Geral">
                         <group name="envio" string="Envio">
-                            <field name="tipo_ambiente" />
                             <field name="nfe_sinc" />
                         </group>
                         <group name="csrt" string="Responsável Técnico">
