@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import re
 import base64
 import copy
+import logging
 from datetime import datetime, timedelta
 import dateutil.relativedelta as relativedelta
 from odoo.exceptions import UserError
-from odoo import api, fields, models, tools
+from odoo import api, fields, models, tools, _
 from odoo.addons import decimal_precision as dp
 from odoo.addons.br_account.models.cst import CST_ICMS
 from odoo.addons.br_account.models.cst import CSOSN_SIMPLES
@@ -17,14 +17,38 @@ from odoo.addons.br_account.models.cst import CST_PIS_COFINS
 from odoo.addons.br_account.models.cst import ORIGEM_PROD
 from odoo.tools import DEFAULT_SERVER_DATETIME_FORMAT as DATETIME_FORMAT
 
+_logger = logging.getLogger(__name__)
 
 STATE = {'edit': [('readonly', False)]}
 
 
+# format_amount function for fiscal observation
+# This way we can format numbers in currency template on fiscal observation msg
+# We'll call this function when setting the variables env below
+def format_amount(env, amount, currency):
+    fmt = "%.{0}f".format(currency.decimal_places)
+    lang = env['res.lang']._lang_get(env.context.get('lang') or 'en_US')
+
+    formatted_amount = lang.format(
+        fmt, currency.round(amount), grouping=True, monetary=True).replace(
+            r' ', u'\N{NO-BREAK SPACE}').replace(
+                r'-', u'-\N{ZERO WIDTH NO-BREAK SPACE}')
+
+    pre = post = u''
+    if currency.position == 'before':
+        pre = u'{symbol}\N{NO-BREAK SPACE}'.format(
+            symbol=currency.symbol or '')
+    else:
+        post = u'\N{NO-BREAK SPACE}{symbol}'.format(
+            symbol=currency.symbol or '')
+
+    return u'{pre}{0}{post}'.format(formatted_amount, pre=pre, post=post)
+
 class InvoiceEletronic(models.Model):
     _name = 'invoice.eletronic'
-
-    _inherit = ['mail.thread']
+    _description = "Nota Fiscal"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'id desc'
 
     code = fields.Char(
         u'Código', size=100, required=True, readonly=True, states=STATE)
@@ -38,7 +62,11 @@ class InvoiceEletronic(models.Model):
          ('error', 'Erro'),
          ('done', 'Enviado'),
          ('cancel', 'Cancelado')],
-        string=u'State', default='draft', readonly=True, states=STATE)
+        string=u'State', default='draft', readonly=True, states=STATE,
+        track_visibility='always')
+    schedule_user_id = fields.Many2one(
+        'res.users', string="Agendado por", readonly=True,
+        track_visibility='always')
     tipo_operacao = fields.Selection(
         [('entrada', 'Entrada'),
          ('saida', 'Saída')],
@@ -62,10 +90,15 @@ class InvoiceEletronic(models.Model):
         string=u'Número', readonly=True, states=STATE)
     numero_controle = fields.Integer(
         string=u'Número de Controle', readonly=True, states=STATE)
+    data_agendada = fields.Date(
+        string=u'Data agendada',
+        readonly=True,
+        default=fields.Date.today,
+        states=STATE)
     data_emissao = fields.Datetime(
         string=u'Data emissão', readonly=True, states=STATE)
     data_fatura = fields.Datetime(
-        string=u'Data Entrada/Saída', readonly=True, states=STATE)
+        string=u'Data Entrada/Saída', readonly=True, states=STATE) #Jove
     data_autorizacao = fields.Char(
         string=u'Data de autorização', size=30, readonly=True, states=STATE)
     ambiente = fields.Selection(
@@ -175,9 +208,11 @@ class InvoiceEletronic(models.Model):
         string=u'Informações complementares', readonly=True, states=STATE)
 
     codigo_retorno = fields.Char(
-        string=u'Código Retorno', readonly=True, states=STATE)
+        string=u'Código Retorno', readonly=True, states=STATE,
+        track_visibility='onchange')
     mensagem_retorno = fields.Char(
-        string=u'Mensagem Retorno', readonly=True, states=STATE)
+        string=u'Mensagem Retorno', readonly=True, states=STATE,
+        track_visibility='onchange')
     numero_nfe = fields.Char(
         string=u"Numero Formatado NFe", readonly=True, states=STATE)
 
@@ -374,7 +409,12 @@ class InvoiceEletronic(models.Model):
             # is needed, apparently.
             'relativedelta': lambda *a, **kw: relativedelta.relativedelta(
                 *a, **kw),
+            # adding format amount
+            # now we can format values like currency on fiscal observation
+            'format_amount': lambda amount, currency,
+            context=self._context: format_amount(self.env, amount, currency),
         })
+
         mako_safe_env = copy.copy(mako_template_env)
         mako_safe_env.autoescape = False
 
@@ -383,14 +423,17 @@ class InvoiceEletronic(models.Model):
             if item.document_id and item.document_id.code != self.model:
                 continue
             template = mako_safe_env.from_string(tools.ustr(item.message))
-            variables = {
-                'user': self.env.user,
-                'ctx': self._context,
-                'invoice': self.invoice_id,
-            }
+            variables = self._get_variables_msg()
             render_result = template.render(variables)
             result += render_result + '\n'
         return result
+
+    def _get_variables_msg(self):
+        return {
+            'user': self.env.user,
+            'ctx': self._context,
+            'invoice': self.invoice_id
+            }
 
     @api.multi
     def validate_invoice(self):
@@ -399,7 +442,7 @@ class InvoiceEletronic(models.Model):
         if len(errors) > 0:
             msg = u"\n".join(
                 [u"Por favor corrija os erros antes de prosseguir"] + errors)
-            self.unlink()
+            self.sudo().unlink()
             raise UserError(msg)
 
     @api.multi
@@ -424,6 +467,7 @@ class InvoiceEletronic(models.Model):
 
     @api.multi
     def action_back_to_draft(self):
+        self.action_post_validate()
         self.state = 'draft'
 
     @api.multi
@@ -440,7 +484,7 @@ class InvoiceEletronic(models.Model):
         for item in self:
             if not item.can_unlink():
                 raise UserError(
-                    u'Documento Eletrônico enviado - Proibido excluir')
+                    _('Documento Eletrônico enviado - Proibido excluir'))
         super(InvoiceEletronic, self).unlink()
 
     def log_exception(self, exc):
@@ -448,33 +492,45 @@ class InvoiceEletronic(models.Model):
         self.mensagem_retorno = str(exc)
 
     def notify_user(self):
-        redirect = {
-            'name': 'Invoices',
-            'model': 'account.invoice',
-            'view': 'form',
-            'domain': [['id', '=', self.invoice_id.id]],
-            'context': {}
-        }
-        msg = 'Verifique a %s, ocorreu um problema com o envio de \
-        documento eletrônico!' % self.name
-        self.create_uid.notify(msg, sticky=True, title="Ação necessária!",
-                               warning=True, redirect=redirect)
+        msg = _('Verifique a %s, ocorreu um problema com o envio de \
+                documento eletrônico!') % self.name
+        self.create_uid.notify_warning(
+            msg, sticky=True, title="Ação necessária!")
+        try:
+            activity_type_id = self.env.ref('mail.mail_activity_data_todo').id
+        except ValueError:
+            activity_type_id = False
+        self.env['mail.activity'].create({
+            'activity_type_id': activity_type_id,
+            'note': _('Please verify the eletronic document'),
+            'user_id': self.schedule_user_id.id,
+            'res_id': self.id,
+            'res_model_id': self.env.ref(
+                'br_account_einvoice.model_invoice_eletronic').id,
+        })
 
     def _get_state_to_send(self):
         return ('draft',)
 
     @api.multi
-    def cron_send_nfe(self):
+    def cron_send_nfe(self, limit=50):
         inv_obj = self.env['invoice.eletronic'].with_context({
             'lang': self.env.user.lang, 'tz': self.env.user.tz})
         states = self._get_state_to_send()
-        nfes = inv_obj.search([('state', 'in', states)])
+        nfes = inv_obj.search([('state', 'in', states),
+                               ('data_agendada', '<=', fields.Date.today())],
+                              limit=limit)
         for item in nfes:
             try:
+                _logger.info('Sending edoc id: %s (number: %s) by cron' % (
+                    item.id, item.numero))
                 item.action_send_eletronic_invoice()
+                self.env.cr.commit()
             except Exception as e:
                 item.log_exception(e)
                 item.notify_user()
+                _logger.error(
+                    'Erro no envio de documento eletrônico', exc_info=True)
 
     def _find_attachment_ids_email(self):
         return []
@@ -483,15 +539,19 @@ class InvoiceEletronic(models.Model):
     def send_email_nfe(self):
         mail = self.env.user.company_id.nfe_email_template
         if not mail:
-            raise UserError('Modelo de email padrão não configurado')
-        print('passei aqui\n\n')
+            raise UserError(_('Modelo de email padrão não configurado'))
         atts = self._find_attachment_ids_email()
-        if atts == None : atts = []
-        print(atts)
-        values = {
-            "attachment_ids": atts + mail.attachment_ids.ids
-        }
-        mail.send_mail(self.invoice_id.id, email_values=values)
+        _logger.info('Sending e-mail for e-doc %s (number: %s)' % (
+            self.id, self.numero))
+
+        values = mail.generate_email([self.invoice_id.id])[self.invoice_id.id]
+        subject = values.pop('subject')
+        values.pop('body')
+        values.pop('attachment_ids')
+        self.invoice_id.message_post(
+            body=values['body_html'], subject=subject,
+            message_type='email', subtype='mt_comment',
+            attachment_ids=atts + mail.attachment_ids.ids, **values)
 
     @api.multi
     def send_email_nfe_queue(self):
@@ -504,9 +564,14 @@ class InvoiceEletronic(models.Model):
             nfe.send_email_nfe()
             nfe.email_sent = True
 
+    @api.multi
+    def copy(self, default=None):
+        raise UserError(_('Não é possível duplicar uma Nota Fiscal.'))
+
 
 class InvoiceEletronicEvent(models.Model):
     _name = 'invoice.eletronic.event'
+    _description = "Eventos de nota fiscal eletrônica"
     _order = 'id desc'
 
     code = fields.Char(string=u'Código', readonly=True, states=STATE)
@@ -520,6 +585,7 @@ class InvoiceEletronicEvent(models.Model):
 
 class InvoiceEletronicItem(models.Model):
     _name = 'invoice.eletronic.item'
+    _description = "Item da nota fiscal eletrônica"
 
     name = fields.Text(u'Nome', readonly=True, states=STATE)
     company_id = fields.Many2one(
@@ -542,15 +608,20 @@ class InvoiceEletronicItem(models.Model):
     ncm = fields.Char(u'NCM', size=10, readonly=True, states=STATE)
 
     uom_id = fields.Many2one(
-        'product.uom', string=u'Unidade Medida', readonly=True, states=STATE)
+        'uom.uom', string=u'Unidade Medida', readonly=True, states=STATE)
     quantidade = fields.Float(
-        string=u'Quantidade', readonly=True, states=STATE)
+        string=u'Quantidade', readonly=True, states=STATE,
+        digits=dp.get_precision('Product Unit of Measure'))
     preco_unitario = fields.Monetary(
-        string=u'Preço Unitário', digits=dp.get_precision('Account'),
+        string=u'Preço Unitário', digits=dp.get_precision('Product Price'),
         readonly=True, states=STATE)
 
+    pedido_compra = fields.Char(
+        string="Pedido Compra", size=60,
+        help="Se setado aqui sobrescreve o pedido de compra da fatura")
     item_pedido_compra = fields.Char(
-        string=u'Item do pedido de compra do cliente')
+        string="Item de compra", size=20,
+        help=u'Item do pedido de compra do cliente')
 
     frete = fields.Monetary(
         string=u'Frete', digits=dp.get_precision('Account'),

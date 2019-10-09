@@ -12,7 +12,7 @@ IMPLEMENTADOS = (u'1', u'3', u'4', u'7', u'9', u'10')
 
 
 class PaymentMode(models.Model):
-    _inherit = "payment.mode"
+    _inherit = "l10n_br.payment.mode"
 
     file_number_sequence = fields.Many2one('ir.sequence', string="Sequencia do CNAB")
     boleto = fields.Boolean(string="Boleto?")

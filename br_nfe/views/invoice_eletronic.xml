@@ -9,7 +9,7 @@
             <div name="alertas" position="before">
                 <field name="ambiente_nfe" invisible="1" />
                 <div class="alert alert-danger" role="alert" style="margin-bottom:0px;"
-                    attrs="{'invisible': ['|', ('ambiente_nfe', '==', '1'), ('model', '!=', '55')]}">
+                    attrs="{'invisible': ['|', ('ambiente_nfe', '==', '1'), ('model', 'not in', ('55', '65'))]}">
                     A NFe está em ambiente de homologação
                 </div>
             </div>
@@ -20,6 +20,7 @@
             </button>
             <field name="payment_term_id" position="after">
                 <field name="payment_mode_id" />
+<!--                <field name="metodo_pagamento" /> # We should look if it exists on model # Jove-->
             </field>
             <page name="totais" position="after">
                 <page name="transporte" string="Transportes" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}">
@@ -94,6 +95,9 @@
                     <b>Protocolo Autorização:</b><field name="protocolo_nfe" class="oe_inline" readonly="1"/>
                 </span>
             </field>
+            <field name="data_emissao" position="after">
+                <field name="data_entrada_saida" />
+            </field>
             <field name="numero_controle" position="after">
                 <field name="recibo_nfe"  attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
                 <field name="nfe_processada_name" invisible="1"/>
@@ -105,6 +109,7 @@
                 <field name="ind_pres" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
                 <field name="ind_dest" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
                 <field name="ind_ie_dest" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
+                <field name="iest" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
             </field>
             <field name="valor_cofins" position="after">
                 <field name="valor_icms_fcp_uf_dest" attrs="{'invisible': [('model', 'not in', ('55', '65'))]}" />
