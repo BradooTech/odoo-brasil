@@ -591,6 +591,7 @@ class InvoiceEletronic(models.Model):
                 '[^0-9]', '', self.company_id.cnae_main_id.code or '')
         dest = None
         exporta = None
+        
         if self.commercial_partner_id:
             partner = self.commercial_partner_id
             dest = {
@@ -614,15 +615,30 @@ class InvoiceEletronic(models.Model):
                 'indIEDest': self.ind_ie_dest,
                 'IE':  re.sub('[^0-9]', '', partner.inscr_est or ''),
             }
-            if self.model == '65':
-                dest.update(
-                    {'CPF': re.sub('[^0-9]', '', partner.cnpj_cpf or '')})
+            
+            # if partner.company_type == 'person':
+            #     dest['CPF']: re.sub('[^0-9]', '', partner.cnpj_cpf or '')
+            # else:
+            #     dest['CNPJ'] = re.sub('[^0-9]', '', partner.cnpj_cpf or '')
 
             if self.ambiente == 'homologacao':
                 dest['xNome'] = \
-                    u'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO -\
- SEM VALOR FISCAL'
-            if partner.country_id.id != self.company_id.country_id.id:
+                    u'NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - \
+SEM VALOR FISCAL'
+
+            if self.model == '65':
+                if not partner.cnpj_cpf:
+                    dest.pop('enderDest')
+                    dest.pop('IE')
+                    dest['xNome'] = ''
+                    dest['indIEDest'] = ''
+                else:
+                    if partner.company_type == 'person':
+                        dest['CPF']: re.sub('[^0-9]', '', partner.cnpj_cpf or '')
+                    else:
+                        dest['CNPJ'] = re.sub('[^0-9]', '', partner.cnpj_cpf or '')
+
+            if partner.country_id.id != self.company_id.country_id.id and self.model != '65':
                 dest['idEstrangeiro'] = re.sub(
                     '[^0-9]', '', partner.cnpj_cpf or '')
                 dest['enderDest']['UF'] = 'EX'
@@ -783,18 +799,7 @@ class InvoiceEletronic(models.Model):
             },
             'dup': duplicatas
         }
-        # if self.payment_mode_id.tipo_pagamento == '90':
-        #     pag = [{
-        #         'tPag': self.payment_mode_id.tipo_pagamento or '15',
-        #         'vPag': '0.00',
-        #     }]
-
-        # else:
-        #     pag = [{
-        #         'indPag': self.payment_term_id.indPag or '0',
-        #         'tPag': self.payment_mode_id.tipo_pagamento or '15',
-        #         'vPag': "%.02f" % self.valor_final
-        #     }]
+        
         pag = {
             'indPag': self.payment_term_id.indPag or '0',
             'tPag': self.payment_mode_id.tipo_pagamento or '90',
@@ -806,33 +811,15 @@ class InvoiceEletronic(models.Model):
         self.informacoes_legais = self.informacoes_legais.replace(
             '\n', '<br />')
 
-        # if self.valor_estimado_tributos > 0.00:
-        #     percent_vr_aprox_trib = (self.valor_estimado_tributos / self.valor_final) * 100
-            
-        #     infAdic = {
-        #         'infCpl': (
-        #             '%s - Total de impostos estimados: %s(%s%) - Fonte: IBPT' %
-        #             (self.informacoes_complementares,
-        #             self.valor_estimado_tributos,
-        #             "%.2f" % percent_vr_aprox_trib)
-        #             if self.valor_estimado_tributos else ''
-        #         ),
-        #         'infAdFisco': self.informacoes_legais or '',
-        #     }
-        # else:
-        #     infAdic = {
-        #         'infCpl': self.informacoes_complementares or '',
-        #         'infAdFisco': self.informacoes_legais or '',
-        #     }
         infAdic = {
             'infCpl': self.informacoes_complementares or '',
             'infAdFisco': self.informacoes_legais or '',
         }
 
         compras = {
-            'xNEmp': self.nota_empenho or '',
-            'xPed': self.pedido_compra or '',
-            'xCont': self.contrato_compra or '',
+            'xNEmp': self.nota_empenho or '' if self.model == '55' else '',
+            'xPed': self.pedido_compra or '' if self.model == '55' else '',
+            'xCont': self.contrato_compra or '' if self.model == '55' else '',
         }
         
         responsavel_tecnico = self.company_id.responsavel_tecnico_id
@@ -870,7 +857,7 @@ class InvoiceEletronic(models.Model):
             'compra': compras,
             'infRespTec': infRespTec,
         }
-        # if len(duplicatas) > 0:
+        
         if self.valor_servicos > 0.0:
             vals.update({
                 'ISSQNtot': issqn_total,
@@ -989,7 +976,7 @@ class InvoiceEletronic(models.Model):
         lote = self._prepare_lote(self.id, nfe_values)
 
         xml_enviar = xml_autorizar_nfe(certificado, **lote)
-
+        
         mensagens_erro = valida_nfe(xml_enviar)
         if mensagens_erro:
             raise UserError(mensagens_erro)

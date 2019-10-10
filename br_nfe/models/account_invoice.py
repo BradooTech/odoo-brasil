@@ -62,7 +62,6 @@ class AccountInvoice(models.Model):
     @api.multi
     def action_invoice_open(self):
         if self.invoice_model == '65' and self.payment_mode == '01':
-            print("entrou primeiro if")
             if self.amount_full_paid < self.amount_total:
                 raise UserError("Para NFCe com pagamento em dinheiro, o valor pago deve ser maior ou igual ao valor total.")
         
@@ -159,11 +158,16 @@ class AccountInvoice(models.Model):
             res['ind_final'] = '0'
         else:
             res['ind_final'] = '1'
-        res['ind_dest'] = '1'
-        if inv.company_id.state_id != inv.commercial_partner_id.state_id:
-            res['ind_dest'] = '2'
-        if inv.company_id.country_id != inv.commercial_partner_id.country_id:
-            res['ind_dest'] = '3'
+        
+        if self.invoice_model == '65':
+            res['ind_dest'] = '1'
+        else:
+            res['ind_dest'] = '1'
+            if inv.company_id.state_id != inv.commercial_partner_id.state_id:
+                res['ind_dest'] = '2'
+            if inv.company_id.country_id != inv.commercial_partner_id.country_id:
+                res['ind_dest'] = '3'
+        
         if inv.fiscal_position_id.ind_final:
             res['ind_final'] = inv.fiscal_position_id.ind_final
 
@@ -185,6 +189,7 @@ class AccountInvoice(models.Model):
             ind_ie_dest = '9'
         if inv.commercial_partner_id.indicador_ie_dest:
             ind_ie_dest = inv.commercial_partner_id.indicador_ie_dest
+        print("\nind_ie_dest", ind_ie_dest, "\n")
         res['ind_ie_dest'] = ind_ie_dest
 
         # Duplicatas
