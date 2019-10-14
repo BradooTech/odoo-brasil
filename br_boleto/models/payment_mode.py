@@ -2,19 +2,18 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo.addons.br_boleto.boleto.document import getBoletoSelection
-from odoo import api, fields, models
+from ..boleto.document import getBoletoSelection
+from odoo import api, fields, models, _
 from odoo.addons import decimal_precision as dp
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 selection = getBoletoSelection()
-IMPLEMENTADOS = (u'1', u'3', u'4', u'7', u'9', u'10')
+IMPLEMENTADOS = ('1', '3', '4', '6', '7', '8', '9', '10')
 
 
 class PaymentMode(models.Model):
     _inherit = "l10n_br.payment.mode"
 
-    file_number_sequence = fields.Many2one('ir.sequence', string="Sequencia do CNAB")
     boleto = fields.Boolean(string="Boleto?")
     nosso_numero_sequence = fields.Many2one(
         'ir.sequence', string=u'Seq. do Nosso Número')
@@ -30,7 +29,7 @@ class PaymentMode(models.Model):
     boleto_aceite = fields.Selection(
         [('S', 'Sim'), ('N', 'Não')], string='Aceite', default='N')
     boleto_type = fields.Selection(
-        selection, string="Boleto")
+        selection, string="Banco do Boleto")
     boleto_especie = fields.Selection([
         ('01', u'DUPLICATA MERCANTIL'),
         ('02', u'NOTA PROMISSÓRIA'),
@@ -63,61 +62,67 @@ class PaymentMode(models.Model):
     def br_boleto_onchange_boleto_type(self):
         vals = {}
 
-        if self.boleto_type not in IMPLEMENTADOS:
+        if (self.boleto_type) and (self.boleto_type not in IMPLEMENTADOS):
             vals['warning'] = {
-                'title': u'Ação Bloqueada!',
-                'message': u'Este boleto ainda não foi implentado!'
+                'title': _('Ação Bloqueada!'),
+                'message': _('Este boleto ainda não foi implementado!')
             }
 
         if self.boleto_type == u'1':
-            if self.bank_account_id.bank_id.bic != '001':
+            if self.journal_id.bank_account_id.bank_id.bic != '001':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
 
             self.boleto_carteira = u'17'
             self.boleto_variacao = u'19'
 
         if self.boleto_type == u'3':
-            if self.bank_account_id.bank_id.bic != '237':
+            if self.journal_id.bank_account_id.bank_id.bic != '237':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
             self.boleto_carteira = u'9'
 
         if self.boleto_type == u'4':
-            if self.bank_account_id.bank_id.bic != '104':
+            if self.journal_id.bank_account_id.bank_id.bic != '104':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
             self.boleto_carteira = u'1'
             self.boleto_modalidade = '14'
 
         if self.boleto_type == u'7':
-            if self.bank_account_id.bank_id.bic != '033':
+            if self.journal_id.bank_account_id.bank_id.bic != '033':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
             self.boleto_carteira = u'101'
 
         if self.boleto_type == u'9':
-            if self.bank_account_id.bank_id.bic != '756':
+            if self.journal_id.bank_account_id.bank_id.bic != '756':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
             self.boleto_carteira = u'1'
             self.boleto_modalidade = u'01'
 
         if self.boleto_type == u'10':
-            if self.bank_account_id.bank_id.bic != '0851':
+            if self.journal_id.bank_account_id.bank_id.bic != '0851':
                 vals['warning'] = {
-                    'title': u'Ação Bloqueada!',
-                    'message': u'Este boleto não combina com a conta bancária!'
+                    'title': _('Ação Bloqueada!'),
+                    'message':
+                    _('Este boleto não combina com a conta bancária!')
                 }
             self.boleto_carteira = '01'
             self.boleto_protesto = '3'
@@ -130,8 +135,8 @@ class PaymentMode(models.Model):
 
         if self.boleto_type == u'9' and len(self.boleto_carteira) != 1:
             vals['warning'] = {
-                'title': u'Ação Bloqueada!',
-                'message': 'A carteira deste banco possui apenas um digito!'
+                'title': _('Ação Bloqueada!'),
+                'message': _('A carteira deste banco possui apenas um digito!')
                 }
 
         return vals
@@ -139,7 +144,31 @@ class PaymentMode(models.Model):
     @api.onchange('boleto_protesto', 'boleto_type')
     def _check_boleto_protesto(self):
         if self.boleto_protesto == '0' and self.boleto_type == '3':
-            raise UserError('Código de protesto inválido para banco Bradesco!')
+            raise UserError(
+                _('Código de protesto inválido para banco Bradesco!'))
+
+    @api.constrains('boleto', 'journal_id', 'type', 'boleto_type')
+    def _check_payment_mode(self):
+        for rec in self:
+            if rec.type != 'receivable' or not rec.boleto:
+                continue
+            if not rec.journal_id:
+                raise ValidationError(_('Para boleto o diário é obrigatório'))
+            if not rec.journal_id.bank_account_id:
+                raise ValidationError(
+                    _('Não existe conta bancária cadastrada no \
+                      diário escolhido'))
+            if not rec.nosso_numero_sequence:
+                raise ValidationError(
+                    _('Para boleto a Sequência do Nosso Número é obrigatória'))
+            total = self.search_count(
+                [('nosso_numero_sequence', '=', rec.nosso_numero_sequence.id),
+                 ('id', '!=', rec.id)])
+            if total > 0:
+                raise ValidationError(
+                    _('Sequência já usada em outro modo de pagamento'))
+            if not rec.boleto_type:
+                raise ValidationError(_('Escolha o banco do boleto!'))
 
     @api.multi
     def write(self, vals):
