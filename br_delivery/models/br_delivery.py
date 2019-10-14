@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2010  Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -33,6 +32,7 @@ class BrDeliveryCarrierVehicle(models.Model):
 
 class BrDeliveryShipment(models.Model):
     _name = 'br_delivery.shipment'
+    _description = "Expedição"
 
     code = fields.Char(u'Nome', size=32)
     description = fields.Char(u'Descrição', size=132)

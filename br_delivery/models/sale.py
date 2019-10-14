@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009  Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -21,8 +20,8 @@ class SaleOrder(models.Model):
         if pick:
             result.update({
                 'carrier_id': pick[0].carrier_id.id,
-                'incoterm': pick[0].incoterm.id,
-                'shipping_supplier': pick[0].carrier_id.partner_id.id,
+                'incoterm_id': pick[0].incoterm.id,
+                'shipping_supplier_id': pick[0].carrier_id.partner_id.id,
                 'freight_responsibility': pick[0].freight_responsibility,
                 'vehicle_plate': pick[0].vehicle_plate,
                 'vehicle_state_id': pick[0].vehicle_state_id.id,
@@ -38,5 +37,5 @@ class SaleOrder(models.Model):
 
     @api.onchange('carrier_id')
     def onchange_carrier_id(self):
-        if self.carrier_id.incoterm:
+        if self.carrier_id:
             self.incoterm = self.carrier_id.incoterm
