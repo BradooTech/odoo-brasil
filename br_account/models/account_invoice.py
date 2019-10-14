@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009 Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -13,7 +12,6 @@ class AccountInvoice(models.Model):
 
     @api.one
     @api.depends('invoice_line_ids.price_subtotal',
-                 'invoice_line_ids.price_total',
                  'tax_line_ids.amount',
                  'currency_id', 'company_id')
     def _compute_amount(self):
@@ -79,22 +77,15 @@ class AccountInvoice(models.Model):
     @api.one
     @api.depends('move_id.line_ids')
     def _compute_receivables(self):
-        receivable_lines = []
-        for line in self.move_id.line_ids:
-            if line.account_id.user_type_id.type == "receivable":
-                receivable_lines.append(line.id)
-        self.receivable_move_line_ids = self.env['account.move.line'].browse(
-            list(set(receivable_lines)))
+        self.receivable_move_line_ids = self.move_id.line_ids.filtered(
+            lambda m: m.account_id.user_type_id.type == 'receivable'
+        ).sorted(key=lambda m: m.date_maturity)
 
     @api.one
     @api.depends('move_id.line_ids')
     def _compute_payables(self):
-        payable_lines = []
-        for line in self.move_id.line_ids:
-            if line.account_id.user_type_id.type == "payable":
-                payable_lines.append(line.id)
-        self.payable_move_line_ids = self.env['account.move.line'].browse(
-            list(set(payable_lines)))
+        self.payable_move_line_ids = self.move_id.line_ids.filtered(
+            lambda m: m.account_id.user_type_id.type == 'payable')
 
     total_tax = fields.Float(
         string='Impostos ( + )', readonly=True, compute='_compute_amount',
@@ -295,7 +286,7 @@ class AccountInvoice(models.Model):
         for line in self.invoice_line_ids:
             if line.quantity == 0:
                 continue
-            res[contador]['price'] = line.price_total
+            res[contador]['price'] = line.valor_liquido
 
             price = line.price_unit * (1 - (
                 line.discount or 0.0) / 100.0)
@@ -314,7 +305,7 @@ class AccountInvoice(models.Model):
                 if tax.price_include and (not tax.account_id or
                                           not tax.deduced_account_id):
                     if tax_dict['amount'] > 0.0:  # Negativo é retido
-                        res[contador]['price'] -= tax_dict['amount']
+                        res[contador]['price'] -= round(tax_dict['amount'], 2)
 
             contador += 1
 
@@ -361,7 +352,7 @@ class AccountInvoice(models.Model):
                 if key not in tax_grouped:
                     tax_grouped[key] = val
                 else:
-                    tax_grouped[key]['amount'] += val['amount']
+                    tax_grouped[key]['amount'] += round(val['amount'], 2)
                     tax_grouped[key]['base'] += val['base']
         return tax_grouped
 
@@ -396,9 +387,24 @@ class AccountInvoice(models.Model):
         res = super(AccountInvoice, self)._prepare_refund(
             invoice, date_invoice=date_invoice, date=date,
             description=description, journal_id=journal_id)
-
+        docs_related = self._prepare_related_documents(invoice)
+        res['fiscal_document_related_ids'] = docs_related
         res['product_document_id'] = invoice.product_document_id.id
         res['product_serie_id'] = invoice.product_serie_id.id
         res['service_document_id'] = invoice.service_document_id.id
         res['service_serie_id'] = invoice.service_serie_id.id
         return res
+
+    def _prepare_related_documents(self, invoice):
+        doc_related = self.env['br_account.document.related']
+        related_vals = []
+        for doc in invoice.invoice_eletronic_ids:
+            vals = {'invoice_related_id': invoice.id,
+                    'document_type':
+                        doc_related.translate_document_type(
+                            invoice.product_document_id.code),
+                    'access_key': doc.chave_nfe,
+                    'numero': doc.numero}
+            related = (0, False, vals)
+            related_vals.append(related)
+        return related_vals

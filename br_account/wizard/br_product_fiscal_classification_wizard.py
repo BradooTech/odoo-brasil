@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # © 2016 Alessandro Fernandes Martini, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 import base64
 import tempfile
 import csv
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 import logging
 
@@ -14,6 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class ProductFiscalClassificationWizard(models.TransientModel):
     _name = 'product.fiscal.classification.wizard'
+    _description = "Classificação fiscal do produto"
 
     product_fiscal_class_csv = fields.Binary(string="Arquivo CSV")
     ncm_csv_delimiter = fields.Char(string='Delimitador', size=3,
@@ -24,7 +24,7 @@ class ProductFiscalClassificationWizard(models.TransientModel):
     @api.multi
     def import_ncm(self):
         if not self.product_fiscal_class_csv:
-            raise UserError(u'Nenhum Arquivo Selecionado!')
+            raise UserError(_('Nenhum Arquivo Selecionado!'))
         ncm_string = base64.decodestring(self.product_fiscal_class_csv)
         temp = tempfile.NamedTemporaryFile(delete=False)
         temp.write(ncm_string)
@@ -35,8 +35,8 @@ class ProductFiscalClassificationWizard(models.TransientModel):
                     csvfile, delimiter=str(self.ncm_csv_delimiter))
             else:
                 if not self.ncm_quote_char:
-                    raise UserError(u'Se o campo indicador de caracter de \
-citação estiver marcado é necessário informá-lo!')
+                    raise UserError(_('Se o campo indicador de caracter de \
+citação estiver marcado é necessário informá-lo!'))
                 ncm_lines = csv.DictReader(
                     csvfile, delimiter=str(self.ncm_csv_delimiter),
                     quotechar=self.ncm_quote_char)

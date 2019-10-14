@@ -13,9 +13,6 @@
         <field name="model">account.invoice</field>
         <field name="inherit_id" ref="account.invoice_form"/>
         <field name="arch" type="xml">
-            <!-- <xpath expr="//sheet/label" position="before">
-                <div class="oe_button_box" name="button_box"></div>
-            </xpath> -->
             <field name="fiscal_position_id" position="replace"></field>
             <field name="payment_term_id" position="after">
                 <field name="fiscal_position_id" domain="['|', ('fiscal_type', '=', None), ('fiscal_type', '=', 'saida')]" />
@@ -41,7 +38,7 @@
             <page name="other_info" position="before">
                 <page name="vencimentos" string="Vencimentos">
                     <field nolabel="1" name="receivable_move_line_ids">
-                        <tree name="vencimentos" string="Vencimentos" colors="grey:reconciled==True;red:date_maturity&lt;current_date">
+                        <tree default_order="date_maturity" name="vencimentos" string="Vencimentos" colors="grey:reconciled==True;red:date_maturity&lt;current_date">
                             <field name="date_maturity"/>
                             <field name="name"/>
                             <field name="ref"/>
@@ -125,7 +122,7 @@
             </xpath>
             <field name="fiscal_position_id" position="replace"></field>
             <field name="reference" position="after">
-                <field name="fiscal_position_id" domain="['|', ('fiscal_type', '=', None), ('fiscal_type', '=', 'entrada')]" /></field>
+                <field name="fiscal_position_id" domain="['|', ('fiscal_type', '=', 'import'), '|', ('fiscal_type', '=', 'entrada'), ('fiscal_type', '=', None)]"/></field>
             <field name="partner_bank_id" position="after">
                 <field name="product_document_id" />
                 <field name="product_serie_id" />
@@ -282,8 +279,8 @@
                         <page name="icms" string="ICMS" attrs="{'invisible': [('product_type', '=', 'service')]}">
                             <group name="detalhes_icms" string="Detalhes do ICMS">
                                 <group>
-                                    <field name="icms_cst_normal" attrs="{'invisible': [('company_fiscal_type', '==', '1')] }" />
-                                    <field name="icms_csosn_simples" attrs="{'invisible': [('company_fiscal_type', '!=', '1')] }" />
+                                    <field name="icms_cst_normal" attrs="{'invisible': [('company_fiscal_type', '!=', '3')] }" />
+                                    <field name="icms_csosn_simples" attrs="{'invisible': [('company_fiscal_type', '==', '3')] }" />
                                     <field name="icms_origem"/>
                                     <field name="icms_tipo_base" invisible="1"/>
                                     <field name="incluir_ipi_base" />
@@ -302,8 +299,8 @@
                                     <field name="tax_icms_id" />
                                     <field name="icms_aliquota" invisible="1"/>
                                     <field name="icms_valor"/>
-                                    <field name="icms_aliquota_credito" attrs="{'invisible': [('company_fiscal_type', '!=', '1')] }" />
-                                    <field name="icms_valor_credito" attrs="{'invisible': [('company_fiscal_type', '!=', '1')] }" />
+                                    <field name="icms_aliquota_credito" attrs="{'invisible': [('company_fiscal_type', '==', '3')] }" />
+                                    <field name="icms_valor_credito" attrs="{'invisible': [('company_fiscal_type', '==', '3')] }" />
                                 </group>
                             </group>
                             <group name="substituicao_icms" string="Substituição Tributária ICMS">
@@ -353,7 +350,7 @@
                         <page name="ipi" string="IPI" attrs="{'invisible': [('product_type','=', 'service')]}">
                             <group string="Detalhes do IPI">
                                 <group>
-                                    <field name="ipi_cst" attrs="{'required': [('product_type','=', 'product')]}"/>
+                                    <field name="ipi_cst"/>
                                     <field name="ipi_tipo"/>
                                     <field name="ipi_rule_id" />
                                 </group>
@@ -370,7 +367,7 @@
                         <page name="pis" string="PIS">
                             <group string="Detalhes do PIS">
                                 <group>
-                                    <field name="pis_cst" attrs="{'required': [('product_type','=', 'product')]}"/>
+                                    <field name="pis_cst"/>
                                     <field name="pis_tipo"/>
                                     <field name="pis_rule_id" />
                                 </group>
@@ -386,7 +383,7 @@
                         <page name="cofins" string="COFINS">
                             <group string="Detalhes do COFINS">
                                 <group>
-                                    <field name="cofins_cst" attrs="{'required': [('product_type','=', 'product')]}"/>
+                                    <field name="cofins_cst"/>
                                     <field name="cofins_tipo"/>
                                     <field name="cofins_rule_id" />
                                 </group>
@@ -409,39 +406,9 @@
                                 <field name="ii_aliquota" invisible="1"/>
                                 <field name="ii_valor"/>
                             </group>
-                            <group string="Declaração de Importação">
-                                <field name="import_declaration_ids" colspan="4" nolabel="1">
-                                    <tree>
-                                        <field name="name"/>
-                                        <field name="date_registration"/>
-                                        <field name="location"/>
-                                        <field name="state_id" options="{'no_create': True, 'no_create_edit': True}"/>
-                                        <field name="date_release"/>
-                                        <field name="type_transportation"/>
-                                    </tree>
-                                    <form string="Declaração de Importação">
-                                        <group>
-                                            <group>
-                                                <field name="name"/>
-                                                <field name="date_registration"/>
-                                                <field name="state_id" options="{'no_create': True, 'no_create_edit': True}"/>
-                                                <field name="location"/>
-                                                <field name="date_release"/>
-                                                <field name="type_transportation" />
-                                            </group>
-                                            <group>
-                                                <field name="afrmm_value" />
-                                                <field name="type_import" />
-                                                <field name="thirdparty_cnpj" />
-                                                <field name="thirdparty_state_id" options="{'no_create': True, 'no_create_edit': True}"/>
-                                                <field name="exporting_code"/>
-                                            </group>
-                                            <group string="Adições" colspan="4">
-                                                <field name="line_ids" nolabel="1"></field>
-                                            </group>
-                                        </group>
-                                    </form>
-                                </field>
+                            <group name="import_declaration" string="Declaração de Importação">
+                                <field name="import_declaration_ids" colspan="4" nolabel="1" widget="many2many"
+                                    domain="[('invoice_id', '=', parent)]" context="{'search_default_invoice_id': parent.id}" />
                             </group>
                         </page>
                         <page name="retencoes" string="Retenções" attrs="{'invisible': [('product_type','!=', 'service')]}">

@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # © 2009 Renato Lima - Akretion
 # © 2014  KMEE - www.kmee.com.br
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError
 
@@ -183,9 +182,10 @@ class BrAccountCNAE(models.Model):
 
 class ImportDeclaration(models.Model):
     _name = 'br_account.import.declaration'
+    _description = "Declaração de Importação"
 
-    invoice_line_id = fields.Many2one(
-        'account.invoice.line', u'Linha de Documento Fiscal',
+    invoice_id = fields.Many2one(
+        'account.invoice', 'Fatura',
         ondelete='cascade', index=True)
     name = fields.Char(u'Número da DI', size=10, required=True)
     date_registration = fields.Date(u'Data de Registro', required=True)
@@ -226,6 +226,7 @@ class ImportDeclaration(models.Model):
 
 class ImportDeclarationLine(models.Model):
     _name = 'br_account.import.declaration.line'
+    _description = "Linha da declaração de importação"
 
     import_declaration_id = fields.Many2one(
         'br_account.import.declaration', u'DI', ondelete='cascade')
@@ -240,6 +241,7 @@ class ImportDeclarationLine(models.Model):
 
 class AccountDocumentRelated(models.Model):
     _name = 'br_account.document.related'
+    _description = "Documentos Relacionados"
 
     invoice_id = fields.Many2one('account.invoice', 'Documento Fiscal',
                                  ondelete='cascade')
@@ -274,7 +276,7 @@ class AccountDocumentRelated(models.Model):
             elif not fiscal.validate_cpf(self.cnpj_cpf):
                 check_cnpj_cpf = False
         if not check_cnpj_cpf:
-            raise UserError(u'CNPJ/CPF do documento relacionado é invalido!')
+            raise UserError(_('CNPJ/CPF do documento relacionado é invalido!'))
 
     @api.one
     @api.constrains('inscr_est')
@@ -294,7 +296,7 @@ class AccountDocumentRelated(models.Model):
                     check_ie = False
         if not check_ie:
             raise UserError(
-                u'Inscrição Estadual do documento fiscal inválida!')
+                _('Inscrição Estadual do documento fiscal inválida!'))
 
     @api.onchange('invoice_related_id')
     def onchange_invoice_related_id(self):
@@ -304,16 +306,8 @@ class AccountDocumentRelated(models.Model):
         if not inv_id.product_document_id:
             return
 
-        if inv_id.product_document_id.code == '55':
-            self.document_type = 'nfe'
-        elif inv_id.product_document_id.code == '04':
-            self.document_type = 'nfrural'
-        elif inv_id.product_document_id.code == '57':
-            self.document_type = 'cte'
-        elif inv_id.product_document_id.code in ('2B', '2C', '2D'):
-            self.document_type = 'cf'
-        else:
-            self.document_type = 'nf'
+        self.document_type = \
+            self.translate_document_type(inv_id.product_document_id.code)
 
         if inv_id.product_document_id.code in ('55', '57'):
             self.serie = False
@@ -324,6 +318,18 @@ class AccountDocumentRelated(models.Model):
             self.date = False
             self.fiscal_document_id = False
             self.inscr_est = False
+
+    def translate_document_type(self, code):
+        if code == '55':
+            return 'nfe'
+        elif code == '04':
+            return 'nfrural'
+        elif code == '57':
+            return 'cte'
+        elif code in ('2B', '2C', '2D'):
+            return 'cf'
+        else:
+            return 'nf'
 
 
 class BrAccountFiscalObservation(models.Model):

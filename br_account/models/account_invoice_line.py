@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009 Renato Lima - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
@@ -6,12 +5,12 @@
 
 from odoo import api, fields, models
 from odoo.addons import decimal_precision as dp
-from odoo.addons.br_account.models.cst import CST_ICMS
-from odoo.addons.br_account.models.cst import CSOSN_SIMPLES
-from odoo.addons.br_account.models.cst import CST_IPI
-from odoo.addons.br_account.models.cst import CST_PIS_COFINS
-from odoo.addons.br_account.models.cst import ORIGEM_PROD
-from odoo.addons.br_account.models.res_company import COMPANY_FISCAL_TYPE
+from .cst import CST_ICMS
+from .cst import CSOSN_SIMPLES
+from .cst import CST_IPI
+from .cst import CST_PIS_COFINS
+from .cst import ORIGEM_PROD
+from .res_company import COMPANY_FISCAL_TYPE
 
 
 class AccountInvoiceLine(models.Model):
@@ -138,8 +137,9 @@ class AccountInvoiceLine(models.Model):
             base_icms_credito = 0.0
 
         price_subtotal_signed = price_subtotal_signed * sign
-        values = {
-            'price_total': taxes['total_included'] if taxes else subtotal,
+
+        self.update({
+            'valor_liquido': taxes['total_included'] if taxes else subtotal,
             'price_tax': taxes['total_included'] - taxes['total_excluded']
             if taxes else 0,
             'price_subtotal': taxes['total_excluded'] if taxes else subtotal,
@@ -164,6 +164,7 @@ class AccountInvoiceLine(models.Model):
             'cofins_valor': sum([x['amount'] for x in cofins]),
             'issqn_base_calculo': sum([x['base'] for x in issqn]),
             'issqn_valor': sum([x['amount'] for x in issqn]),
+            'ii_base_calculo': sum([x['base'] for x in ii]),
             'ii_valor': sum([x['amount'] for x in ii]),
             'csll_base_calculo': sum([x['base'] for x in csll]),
             'csll_valor': sum([x['amount'] for x in csll]),
@@ -171,7 +172,7 @@ class AccountInvoiceLine(models.Model):
             'inss_valor': sum([x['amount'] for x in inss]),
             'irrf_base_calculo': sum([x['base'] for x in irrf]),
             'irrf_valor': sum([x['amount'] for x in irrf]),
-        }
+        })
 
         if self.habilita_desoneracao:
             values = { 
@@ -188,13 +189,13 @@ class AccountInvoiceLine(models.Model):
     def _compute_cst_icms(self):
         for item in self:
             item.icms_cst = item.icms_cst_normal \
-                if item.company_fiscal_type != '1' else item.icms_csosn_simples
+                if item.company_fiscal_type == '3' else item.icms_csosn_simples
 
     price_tax = fields.Float(
         compute='_compute_price', string='Impostos', store=True,
         digits=dp.get_precision('Account'))
-    price_total = fields.Float(
-        u'Valor Líquido', digits=dp.get_precision('Account'), store=True,
+    valor_liquido = fields.Float(
+        'Valor Líquido', digits=dp.get_precision('Account'), store=True,
         default=0.00, compute='_compute_price')
     valor_desconto = fields.Float(
         string='Vlr. desconto', store=True, compute='_compute_price',
@@ -319,7 +320,7 @@ class AccountInvoiceLine(models.Model):
     tax_icms_fcp_id = fields.Many2one(
         'account.tax', string="% FCP", domain=[('domain', '=', 'fcp')])
     icms_aliquota_inter_part = fields.Float(
-        u'% Partilha', default=80.0, digits=dp.get_precision('Discount'))
+        u'% Partilha', default=100.0, digits=dp.get_precision('Discount'))
     icms_fcp_uf_dest = fields.Float(
         string=u'Valor FCP', compute='_compute_price',
         digits=dp.get_precision('Discount'), )
@@ -461,9 +462,8 @@ class AccountInvoiceLine(models.Model):
     ii_valor_despesas = fields.Float(
         'Desp. Aduaneiras', required=True,
         digits=dp.get_precision('Account'), default=0.00)
-    import_declaration_ids = fields.One2many(
-        'br_account.import.declaration',
-        'invoice_line_id', u'Declaração de Importação')
+    import_declaration_ids = fields.Many2many(
+        'br_account.import.declaration', string='Declaração de Importação')
 
     # =========================================================================
     # Impostos de serviço - CSLL
@@ -501,7 +501,7 @@ class AccountInvoiceLine(models.Model):
     # Impostos de serviço - INSS
     # =========================================================================
     inss_rule_id = fields.Many2one('account.fiscal.position.tax.rule', 'Regra')
-    tax_inss_id = fields.Many2one('account.tax', string=u"Alíquota IRRF",
+    tax_inss_id = fields.Many2one('account.tax', string=u"Alíquota INSS",
                                   domain=[('domain', '=', 'inss')])
     inss_base_calculo = fields.Float(
         u'Base INSS', required=True, digits=dp.get_precision('Account'),
@@ -544,9 +544,7 @@ class AccountInvoiceLine(models.Model):
                 'tax_ipi_id': ncm.tax_ipi_id.id,
             })
 
-    def _set_taxes(self):
-        super(AccountInvoiceLine, self)._set_taxes()
-        self._update_tax_from_ncm()
+    def _set_taxes_from_fiscal_pos(self):
         fpos = self.invoice_id.fiscal_position_id
         if fpos:
             vals = fpos.map_tax_extra_values(
@@ -556,12 +554,18 @@ class AccountInvoiceLine(models.Model):
                 if value and key in self._fields:
                     self.update({key: value})
 
+    def _set_taxes(self):
+        super(AccountInvoiceLine, self)._set_taxes()
+        self._update_tax_from_ncm()
+        self._set_taxes_from_fiscal_pos()
+        other_taxes = self.invoice_line_tax_ids.filtered(
+            lambda x: not x.domain)
         self.invoice_line_tax_ids = self.tax_icms_id | self.tax_icms_st_id | \
             self.tax_icms_inter_id | self.tax_icms_intra_id | \
             self.tax_icms_fcp_id | self.tax_ipi_id | \
             self.tax_pis_id | self.tax_cofins_id | self.tax_issqn_id | \
             self.tax_ii_id | self.tax_csll_id | self.tax_irrf_id | \
-            self.tax_inss_id
+            self.tax_inss_id | other_taxes
 
     def _set_extimated_taxes(self, price):
         service = self.product_id.service_type_id
@@ -576,7 +580,7 @@ class AccountInvoiceLine(models.Model):
                 price * (service.municipal_imposto / 100)
         else:
             federal = ncm.federal_nacional if self.icms_origem in \
-                ('1', '2', '3', '8') else ncm.federal_importado
+                ('0', '3', '4', '5', '8') else ncm.federal_importado
 
             self.tributos_estimados_federais = price * (federal / 100)
             self.tributos_estimados_estaduais = \

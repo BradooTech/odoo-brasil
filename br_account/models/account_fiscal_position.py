@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 
 from odoo import api, fields, models
-from odoo.addons.br_account.models.cst import CST_ICMS
-from odoo.addons.br_account.models.cst import CSOSN_SIMPLES
-from odoo.addons.br_account.models.cst import CST_IPI
-from odoo.addons.br_account.models.cst import CST_PIS_COFINS
+from .cst import CST_ICMS
+from .cst import CSOSN_SIMPLES
+from .cst import CST_IPI
+from .cst import CST_PIS_COFINS
 
 
 class AccountFiscalPositionTaxRule(models.Model):
     _name = 'account.fiscal.position.tax.rule'
+    _description = "Regras de Impostos"
     _order = 'sequence'
 
     sequence = fields.Integer(string=u"Sequência")
@@ -86,56 +86,60 @@ class AccountFiscalPosition(models.Model):
 
     journal_id = fields.Many2one(
         'account.journal', string=u"Diário Contábil",
-        help=u"Diário Contábil a ser utilizado na fatura.")
+        help=u"Diário Contábil a ser utilizado na fatura.", copy=True)
     account_id = fields.Many2one(
         'account.account', string=u"Conta Contábil",
-        help=u"Conta Contábil a ser utilizada na fatura.")
+        help=u"Conta Contábil a ser utilizada na fatura.", copy=True)
     fiscal_observation_ids = fields.Many2many(
-        'br_account.fiscal.observation', string=u"Mensagens Doc. Eletrônico")
+        'br_account.fiscal.observation', string=u"Mensagens Doc. Eletrônico",
+        copy=True)
     note = fields.Text(u'Observações')
 
     product_serie_id = fields.Many2one(
         'br_account.document.serie', string=u'Série Produto',
-        domain="[('fiscal_document_id', '=', product_document_id)]")
+        domain="[('fiscal_document_id', '=', product_document_id)]", copy=True)
     product_document_id = fields.Many2one(
-        'br_account.fiscal.document', string='Documento Produto')
+        'br_account.fiscal.document', string='Documento Produto', copy=True)
 
     service_serie_id = fields.Many2one(
         'br_account.document.serie', string=u'Série Serviço',
-        domain="[('fiscal_document_id', '=', service_document_id)]")
+        domain="[('fiscal_document_id', '=', service_document_id)]",
+        copy=True)
     service_document_id = fields.Many2one(
-        'br_account.fiscal.document', string='Documento Serviço')
+        'br_account.fiscal.document', string='Documento Serviço', copy=True)
 
     icms_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras ICMS", domain=[('domain', '=', 'icms')])
+        string=u"Regras ICMS", domain=[('domain', '=', 'icms')], copy=True)
     ipi_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras IPI", domain=[('domain', '=', 'ipi')])
+        string=u"Regras IPI", domain=[('domain', '=', 'ipi')], copy=True)
     pis_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras PIS", domain=[('domain', '=', 'pis')])
+        string=u"Regras PIS", domain=[('domain', '=', 'pis')], copy=True)
     cofins_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras COFINS", domain=[('domain', '=', 'cofins')])
+        string=u"Regras COFINS", domain=[('domain', '=', 'cofins')],
+        copy=True)
     issqn_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras ISSQN", domain=[('domain', '=', 'issqn')])
+        string=u"Regras ISSQN", domain=[('domain', '=', 'issqn')], copy=True)
     ii_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras II", domain=[('domain', '=', 'ii')])
+        string=u"Regras II", domain=[('domain', '=', 'ii')], copy=True)
     irrf_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras IRRF", domain=[('domain', '=', 'irrf')])
+        string=u"Regras IRRF", domain=[('domain', '=', 'irrf')], copy=True)
     csll_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras CSLL", domain=[('domain', '=', 'csll')])
+        string=u"Regras CSLL", domain=[('domain', '=', 'csll')], copy=True)
     inss_tax_rule_ids = fields.One2many(
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
-        string=u"Regras INSS", domain=[('domain', '=', 'inss')])
+        string=u"Regras INSS", domain=[('domain', '=', 'inss')], copy=True)
     fiscal_type = fields.Selection([('saida', 'Saída'),
-                                    ('entrada', 'Entrada')],
-                                   string=u"Tipo da posição")
+                                    ('entrada', 'Entrada'),
+                                    ('import', 'Entrada Importação')],
+                                   string=u"Tipo da posição", copy=True)
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False,

@@ -13,6 +13,7 @@
                 <group string="Usar a seguinte tributação">
                     <group>
                         <field name="tax_id" domain="[('domain', '=', domain)]" />
+                        <field name="cfop_id" domain="[('internal_type', '=', 'normal')]" attrs="{'invisible': [('domain', 'not in', ('icms', 'issqn'))]}"/>
                     </group>
                     <group>
                         <field name="cst_icms" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
@@ -32,6 +33,7 @@
                     </group>
                     <group>
                         <field name="incluir_ipi_base" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
+                 <!--#Jove: Verificar a possibilidade de alocar no ICMS Tax Rules para melhor aproveitamento das fpos-->
                         <field name="habilita_desoneracao" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
                         <field name="motivo_icms_desoneracao" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
                         <field name="icms_aliquota_credito" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
