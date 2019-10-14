@@ -9,6 +9,9 @@ from odoo.addons import decimal_precision as dp
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
+    fiscal_position_type = fields.Selection(
+        related='fiscal_position_id.fiscal_type', readonly=True)
+
     @api.one
     @api.depends('invoice_line_ids.price_subtotal',
                  'invoice_line_ids.price_total',

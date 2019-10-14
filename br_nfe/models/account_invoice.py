@@ -2,7 +2,7 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -35,22 +35,54 @@ class AccountInvoice(models.Model):
         string=u"Número NFe", compute="_compute_nfe_number")
     nfe_exception_number = fields.Integer(
         string=u"Número NFe", compute="_compute_nfe_number")
+    
+    ambiente_nfce = fields.Selection(
+        string="Ambiente NFCe", related="company_id.tipo_ambiente_nfce",
+        readonly=True)
 
+    import_declaration_ids = fields.One2many(
+        'br_account.import.declaration', 'invoice_eletronic_line_id')
+
+    payment_mode = fields.Selection(
+        [('01', 'Dinheiro'),
+         ('02', 'Cheque'),
+         ('03', 'Cartão de Crédito'),
+         ('04', 'Cartão de Débito'),
+         ('05', 'Crédito Loja'),
+         ('10', 'Vale Alimentação'),
+         ('11', 'Vale Refeição'),
+         ('12', 'Vale Presente'),
+         ('13', 'Vale Combustível'),
+         ('15', 'Boleto Bancário'),
+         ('90', 'Sem pagamento'),
+         ('99', 'Outros')], 
+         default='01', string="Método de Pagamento")
+    amount_full_paid = fields.Float(string="Valor total pago")
+
+    @api.multi
+    def action_invoice_open(self):
+        if self.invoice_model == '65':
+            if self.amount_full_paid < self.amount_total:
+                raise UserError("O valor pago deve ser maior ou igual ao valor total da nota.")
+        
+        return super(AccountInvoice, self).action_invoice_open()
+    
     @api.multi
     def action_invoice_draft(self):
         for item in self:
             docs = self.env['invoice.eletronic'].search(
                 [('invoice_id', '=', item.id)])
             for doc in docs:
-                if doc.state in ('done', 'denied', 'cancel'):
-                    raise UserError('Nota fiscal já emitida para esta fatura - \
-                                    Duplique a fatura para continuar')
+                if doc.state in ('done', 'denied'):
+                    raise UserError(
+                        _('Nota fiscal já emitida para esta fatura - \
+                            Duplique a fatura para continuar'))
         return super(AccountInvoice, self).action_invoice_draft()
 
     def invoice_print(self):
         doc = self.env['invoice.eletronic'].search(
             [('invoice_id', '=', self.id)], limit=1)
-        if doc.model == '55':
+        if doc.model not in ('55', '65'):
             return self.env.ref(
                 'br_nfe.report_br_nfe_danfe').report_action(doc)
         else:
@@ -78,11 +110,24 @@ class AccountInvoice(models.Model):
                 {'number_next_actual': inv_inutilized.numeration_end + 1})
         return serie_id.internal_sequence_id.next_by_id()
 
+    def apply_di_to_items(self):
+        for invoice in self:
+            invoice.invoice_line_ids.write({
+                'import_declaration_ids': [
+                    (6, None, invoice.import_declaration_ids.ids)]
+            })
+
     def _prepare_edoc_vals(self, inv, inv_lines, serie_id):
         res = super(AccountInvoice, self)._prepare_edoc_vals(
             inv, inv_lines, serie_id)
 
-        numero_nfe = self.action_number(serie_id)
+        # numero_nfe = self.action_number(serie_id)
+        # Feito para evitar que o número seja incrementado duas vezes
+        if 'numero' not in res:
+            numero_nfe = self.action_number(serie_id)
+        else:
+            numero_nfe = res['numero']
+        
         res['payment_mode_id'] = inv.payment_mode_id.id
         res['ind_pres'] = inv.fiscal_position_id.ind_pres
         res['finalidade_emissao'] = inv.fiscal_position_id.finalidade_emissao
@@ -102,19 +147,27 @@ class AccountInvoice(models.Model):
         res['numero_nfe'] = numero_nfe
         res['numero'] = numero_nfe
         res['name'] = 'Documento Eletrônico: nº %s' % numero_nfe
-        res['ambiente'] = 'homologacao' \
-            if inv.company_id.tipo_ambiente == '2' else 'producao'
-
+        
+        # Validação de ambiente NFe e NFCe, agora em campos distintos
+        if serie_id.fiscal_document_id.code == '55':
+            res['ambiente'] = 'homologacao' if inv.company_id.tipo_ambiente == '2' else 'producao'
+        else:
+            res['ambiente'] = inv.company_id.tipo_ambiente_nfce
         # Indicador Consumidor Final
         if inv.commercial_partner_id.is_company:
             res['ind_final'] = '0'
         else:
             res['ind_final'] = '1'
-        res['ind_dest'] = '1'
-        if inv.company_id.state_id != inv.commercial_partner_id.state_id:
-            res['ind_dest'] = '2'
-        if inv.company_id.country_id != inv.commercial_partner_id.country_id:
-            res['ind_dest'] = '3'
+        
+        if self.invoice_model == '65':
+            res['ind_dest'] = '1'
+        else:
+            res['ind_dest'] = '1'
+            if inv.company_id.state_id != inv.commercial_partner_id.state_id:
+                res['ind_dest'] = '2'
+            if inv.company_id.country_id != inv.commercial_partner_id.country_id:
+                res['ind_dest'] = '3'
+        
         if inv.fiscal_position_id.ind_final:
             res['ind_final'] = inv.fiscal_position_id.ind_final
 
@@ -126,7 +179,9 @@ class AccountInvoice(models.Model):
             elif inv.commercial_partner_id.state_id.code in ('AM', 'BA', 'CE',
                                                              'GO', 'MG', 'MS',
                                                              'MT', 'PE', 'RN',
-                                                             'SP', 'SE'):
+                                                             'SP'):
+                ind_ie_dest = '9'
+            elif inv.commercial_partner_id.country_id.code != 'BR':
                 ind_ie_dest = '9'
             else:
                 ind_ie_dest = '2'
@@ -166,6 +221,12 @@ class AccountInvoice(models.Model):
             }))
 
         res['fiscal_document_related_ids'] = documentos
+
+        # NFC-e
+        res['metodo_pagamento'] = inv.payment_mode
+        res['amount_full_paid'] = inv.amount_full_paid
+        res['troco'] = inv.amount_full_paid - inv.amount_total if (inv.amount_full_paid - inv.amount_total) > 0 else 0.0
+
         return res
 
     def _prepare_edoc_item_vals(self, invoice_line):
@@ -221,3 +282,22 @@ class AccountInvoice(models.Model):
         vals['import_declaration_ids'] = di_importacao
         vals['informacao_adicional'] = invoice_line.informacao_adicional
         return vals
+
+    @api.multi
+    def copy(self, default=None):
+        self.ensure_one()
+        new_acc_inv = super(AccountInvoice, self).copy(default)
+        if self.import_declaration_ids:
+            new_acc_inv.import_declaration_ids = self.import_declaration_ids
+            for i in range(len(new_acc_inv.invoice_line_ids)):
+                new_acc_inv.invoice_line_ids[i].declaration_line_ids = \
+                    self.invoice_line_ids[i].declaration_line_ids
+        return new_acc_inv
+
+
+class AccountInvoiceLine(models.Model):
+    _inherit = 'account.invoice.line'
+
+    declaration_line_ids = fields.One2many(
+        'br_account.import.declaration.line',
+        'invoice_line_id', string='Adições da DI')
