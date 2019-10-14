@@ -156,7 +156,7 @@ class AccountTax(models.Model):
             vals['base'] = base_icms
         return [vals]
 
-    def calc_icms_base(self, price_base, ipi_value, ii_value, pis_value, cofins_value):
+    def calc_icms_base(self, price_base, ipi_value):
         base_icms = price_base
         incluir_ipi = False
         incluir_ii = False

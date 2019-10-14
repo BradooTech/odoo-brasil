@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009  Renato Lima - Akretion
 # © 2015  Michell Stuttgart - KMEE
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
@@ -25,6 +24,7 @@ class ResStateCity(models.Model):
 
 class ResRegion(models.Model):
     _name = 'res.region'
+    _description = "Região"
 
     name = fields.Char(string="Name", size=100)
     city_ids = fields.Many2many('res.state.city', string="Cities")

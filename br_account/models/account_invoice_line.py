@@ -181,7 +181,7 @@ class AccountInvoiceLine(models.Model):
                 'icms_valor': 0.00,
             }
 
-        self.update(values)
+            self.update(values)
 
     @api.multi
     @api.depends('icms_cst_normal', 'icms_csosn_simples',

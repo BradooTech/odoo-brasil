@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # © 2009  Renato Lima - Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 {  # pylint: disable=C8101,C8103
     'name': 'Odoo Brasil - Módulo Base',
     'description': 'Brazilian Localization Base',
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
     'category': 'Localisation',
     'license': 'AGPL-3',
     'author': 'Akretion, OpenERP Brasil',
@@ -32,10 +31,6 @@
         'views/res_company_view.xml',
         'views/base_assets.xml',
         'security/ir.model.access.csv',
-    ],
-    'test': [
-        'test/base_inscr_est_valid.yml',
-        'test/base_inscr_est_invalid.yml',
     ],
     'qweb': ['static/src/xml/*.xml'],
     'post_init_hook': 'post_init',
