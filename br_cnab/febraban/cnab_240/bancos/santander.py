@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -33,19 +32,18 @@ class Santander240(Cnab240):
         vals['forma_cadastramento'] = 1
         vals['codigo_multa'] = int(vals['codigo_multa'])
         vals['codigo_juros'] = int(vals['codigo_juros'])
-        
         vals['juros_mora_taxa'] = vals['juros_mora_taxa'] * Decimal('1000')
-        
+
         #Bradoo - Se a taxa de juros = 0 codigo deve ser 3 = sem juros e data com zeros
-        if int(vals['juros_mora_taxa']) == 0 :
+        if int(vals['juros_mora_taxa']) == 0:
             vals['codigo_juros'] = 3
             vals['juros_mora_data'] = 0
-		
+
         #Bradoo - Se a multa = 0 codigo deve ser 3 = sem juros e data com zeros
-        if Decimal(str(vals['juros_multa'])).quantize(Decimal('1.00')) ==0 :
+        if Decimal(str(vals['juros_multa'])).quantize(Decimal('1.00')) == 0:
             vals['codigo_multa'] = 0
             vals['data_multa'] = 0
-					
+
         # Data da multa fica zerado, dai ele considera data de vencimento
         vals['data_multa'] = 0
         # tipo documento : 1- Tradicional , 2- Escritural
@@ -63,7 +61,7 @@ class Santander240(Cnab240):
 
     def codigo_transmissao(self):
         return int("%s%s" % (
-            self.order.payment_mode_id.bank_account_id.bra_number,
+            self.order.src_bank_account_id.bra_number,
             self.order.payment_mode_id.boleto_cnab_code.zfill(11)))
 
     def nosso_numero(self, nosso_numero_sem_dv):

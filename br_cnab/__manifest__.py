@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -6,7 +5,7 @@
     'name': 'Generate CNAB Files',
     'summary': """Base Module for the Brazilian Cnab Files""",
     'description': """Base Module for the Brazilian Cnab Files""",
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
     'category': 'account',
     'author': 'Trustcode',
     'license': 'AGPL-3',
@@ -25,6 +24,8 @@
     'data': [
         'sequence/br_cnab_sequence.xml',
         'views/payment_order.xml',
+        'views/payment_statement.xml',
+        'wizard/payment_cnab_import.xml',
     ],
     'installable': True
 }

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*- © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
 from odoo import api, fields, models
@@ -9,6 +8,8 @@ class AccountMoveLine(models.Model):
 
     payment_mode_id = fields.Many2one(
         'l10n_br.payment.mode', string=u"Modo de pagamento")
+    l10n_br_order_line_id = fields.Many2one(
+        'payment.order.line', string='Linha de Pagamento')
 
     @api.multi
     @api.depends('debit', 'credit', 'user_type_id', 'amount_residual')
