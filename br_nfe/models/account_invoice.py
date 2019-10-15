@@ -62,9 +62,10 @@ class AccountInvoice(models.Model):
     @api.multi
     def action_invoice_open(self):
         if self.invoice_model == '65':
+            if self.payment_mode == '90':
+                raise UserError("Para NFCe, o método de pagamento deve ser diferente de 'Sem Pagamento'.")
             if self.amount_full_paid < self.amount_total:
                 raise UserError("O valor pago deve ser maior ou igual ao valor total da nota.")
-        
         return super(AccountInvoice, self).action_invoice_open()
     
     @api.multi
@@ -159,7 +160,7 @@ class AccountInvoice(models.Model):
         else:
             res['ind_final'] = '1'
         
-        if self.invoice_model == '65':
+        if inv.invoice_model == '65':
             res['ind_dest'] = '1'
         else:
             res['ind_dest'] = '1'
