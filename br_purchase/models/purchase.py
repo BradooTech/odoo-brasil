@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -54,6 +53,12 @@ class PurchaseOrder(models.Model):
         for order in self:
             order.order_line._compute_tax_id()
 
+    @api.onchange('partner_id')
+    def onchange_partner_fpos(self):
+        if not self.fiscal_position_id:
+            fpos = self.partner_id.property_purchase_fiscal_position_id
+            self.fiscal_position_id = fpos.id
+
 
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
@@ -68,9 +73,10 @@ class PurchaseOrderLine(models.Model):
             self.icms_st_aliquota_reducao_base,
             'ipi_reducao_bc': self.ipi_reducao_bc,
             'icms_st_aliquota_deducao': self.icms_st_aliquota_deducao,
+            'fiscal_type': self.fiscal_position_type,
         }
 
-    @api.depends('taxes_id', 'product_qty',  'price_unit',
+    @api.depends('taxes_id', 'product_qty', 'price_unit', 'discount',
                  'icms_aliquota_reducao_base', 'icms_st_aliquota_reducao_base',
                  'ipi_reducao_bc', 'icms_st_aliquota_deducao',
                  'incluir_ipi_base', 'icms_st_aliquota_mva')
@@ -96,6 +102,10 @@ class PurchaseOrderLine(models.Model):
                 'valor_desconto': desconto,
             })
 
+    fiscal_position_type = fields.Selection(
+        [('saida', 'Saída'), ('entrada', 'Entrada'),
+         ('import', 'Entrada Importação')],
+        string="Tipo da posição fiscal")
     cfop_id = fields.Many2one('br_account.cfop', string="CFOP")
 
     icms_cst_normal = fields.Char(string="CST ICMS", size=5)
@@ -186,22 +196,25 @@ class PurchaseOrderLine(models.Model):
                     vals.get('tax_inss_id', empty)
 
                 line.update({
-                    'taxes_id': [(6, None, [x.id for x in tax_ids if x])]
+                    'taxes_id': [(6, None, [x.id for x in tax_ids if x])],
+                    'fiscal_position_type': fpos.fiscal_type,
                 })
 
     # Calcula o custo da mercadoria comprada
     @api.multi
     def _get_stock_move_price_unit(self):
         price = self.price_unit
+        order = self.order_id
         ctx = self._prepare_tax_context()
         tax_ids = self.taxes_id.with_context(**ctx)
         taxes = tax_ids.compute_all(
-            price, self.order_id.currency_id,
-            self.product_qty, product=self.product_id,
+            price,
+            currency=self.order_id.currency_id,
+            quantity=1.0,
+            product=self.product_id,
             partner=self.order_id.partner_id)
 
         price = taxes['total_included']
-
         for tax in taxes['taxes']:
             # Quando o imposto não tem conta contábil, deduzimos que ele não é
             # recuperável e portanto somamos ao custo, como partimos do valor
@@ -209,5 +222,10 @@ class PurchaseOrderLine(models.Model):
             if tax['account_id']:
                 price -= tax['amount']
 
-        price = price / self.product_qty
+        if self.product_uom.id != self.product_id.uom_id.id:
+            price *= self.product_uom.factor / self.product_id.uom_id.factor
+        if order.currency_id != order.company_id.currency_id:
+            price = order.currency_id.compute(price,
+                                              order.company_id.currency_id,
+                                              round=False)
         return price
