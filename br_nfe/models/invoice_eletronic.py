@@ -287,7 +287,7 @@ class InvoiceEletronic(models.Model):
             if item.outras_despesas else '',
             'indTot': item.indicador_total,
             'cfop': item.cfop,
-            'CEST': re.sub('[^0-9]', '', item.cest or ''),
+            'CEST': re.sub('[^0-9]', '', item.product_id.cest or ''),
             'xPed': item.pedido_compra or invoice.pedido_compra or '',
             'nItemPed': item.item_pedido_compra or '',
         }

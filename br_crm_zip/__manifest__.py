@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2011  Fabio Negrini - Akretion
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -10,15 +9,10 @@
     'license': 'AGPL-3',
     'author': 'Fabio Negrini - OpenERP Brasil',
     'website': 'http://www.trustcode.com.br',
-    'version': '11.0.1.0.0',
+    'version': '12.0.1.0.0',
     'depends': [
         'br_zip',
         'br_crm',
-    ],
-    'data': [
-    ],
-    'test': [
-        'test/crm_zip_test.yml'
     ],
     'installable': True,
     'auto_install': True,
