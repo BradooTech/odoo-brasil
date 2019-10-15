@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2009  Renato Lima - Akretion
 # © 2012  Raphaël Valyi - Akretion
 # © 2016 Danimar Ribeiro, Trustcode
@@ -301,7 +300,8 @@ class SaleOrderLine(models.Model):
         res['tax_csll_id'] = csll and csll.id or False
         res['tax_irrf_id'] = irrf and irrf.id or False
         res['tax_inss_id'] = inss and inss.id or False
-        res['product_type'] = self.product_id.fiscal_type
+
+        res['product_type'] = self.product_id.fiscal_type or 'product'
         res['company_fiscal_type'] = self.company_id.fiscal_type
         res['cfop_id'] = self.cfop_id.id
         ncm = self.product_id.fiscal_classification_id
