@@ -29,6 +29,7 @@ emissao ou de saida."
 
 class WizardCartaCorrecaoEletronica(models.TransientModel):
     _name = 'wizard.carta.correcao.eletronica'
+    _description = 'Carta de Correção Eletrônica'
 
     @api.depends('eletronic_doc_id')
     def _default_sequence_number(self):
