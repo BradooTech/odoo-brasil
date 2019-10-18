@@ -799,7 +799,7 @@ SEM VALOR FISCAL'
         
         pag = {
             'indPag': self.payment_term_id.indPag or '0',
-            'tPag': self.payment_mode_id.tipo_pagamento or '90',
+            'tPag': self.metodo_pagamento or '90',
             'vPag': '0.00',
         }
 

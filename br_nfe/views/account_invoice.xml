@@ -98,13 +98,14 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='payment_mode_id']" position="after">
                 <field name="amount_full_paid" attrs="{'invisible': [('invoice_model', '!=', '65')], 'required': [('invoice_model', '=', '65')]}"/>
-                <field name="payment_mode" attrs="{'invisible': [('invoice_model', '!=', '65')], 'required': [('invoice_model', '=', '65')]}"/>
+                <field name="payment_mode" attrs="{'required': [('invoice_model', '=', '65')]}"/>
             </xpath>
             <xpath expr="//field[@name='payment_mode_id']" position="attributes">
-                <attribute name="attrs">{'invisible': [('invoice_model', '=', '65')]}</attribute>
+                <attribute name="invisible">True</attribute>
             </xpath>
             <xpath expr="//field[@name='payment_term_id']" position="attributes">
-                <attribute name="attrs">{'invisible': [('invoice_model', '=', '65')]}</attribute>
+                <attribute name="invisible">True</attribute>
+                <!-- <attribute name="attrs">{'invisible': [('invoice_model', 'not in', ('65', '55'))]}</attribute> -->
             </xpath>
         </field>
     </record>
