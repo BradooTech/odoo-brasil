@@ -1,8 +1,6 @@
 Odoo Brasil
 ============================================
 
-## Introdução
-
 Localização para o Odoo 11 Brasil
 
 ## Funcionalidades
@@ -21,9 +19,7 @@ Localização para o Odoo 11 Brasil
 
 ## Créditos e Licenciamento
 
-**"f I have seen further, it is by standing on the shoulders of giants"**
-
-Este repositório é Mantido pela Bradootech contém trabalhos originais da OCA Brasil e trabalhos da Trustcode
+Este repositório é Mantido pela Bradootech e contém trabalhos originais da OCA Brasil e trabalhos da Trustcode
 
 <a href="https://github.com/OCA/l10n-brazil">OCA/l10n-brazil</a>
 
