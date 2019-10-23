@@ -49,3 +49,4 @@ class InvoiceEletronicItem(models.Model):
     icms_fcp_uf_dest = fields.Monetary(
         string=u'Valor FCP', readonly=True, states=STATE)
     informacao_adicional = fields.Text(string=u"Informação Adicional")
+    cod_benef = fields.Char(string='Cód. de beneficio fiscal')

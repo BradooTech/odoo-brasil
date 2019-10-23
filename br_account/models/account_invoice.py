@@ -276,6 +276,7 @@ class AccountInvoice(models.Model):
             self.fiscal_position_id.service_document_id.id
 
         ob_ids = [x.id for x in self.fiscal_position_id.fiscal_observation_ids]
+
         self.fiscal_observation_ids = [(6, False, ob_ids)]
 
     @api.multi

@@ -329,6 +329,7 @@ class InvoiceEletronic(models.Model):
             'xPed': invoice.pedido_compra or '',
             #'xPed': item.pedido_compra or invoice.pedido_compra or '',
             'nItemPed': item.item_pedido_compra or '',
+            **({'cBenef': item.cod_benef} if item.cod_benef else {}),
         }
         di_vals = []
         for di in item.import_declaration_ids:

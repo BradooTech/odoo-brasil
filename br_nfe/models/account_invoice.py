@@ -282,6 +282,8 @@ class AccountInvoice(models.Model):
             }))
         vals['import_declaration_ids'] = di_importacao
         vals['informacao_adicional'] = invoice_line.informacao_adicional
+        vals['cod_benef'] = invoice_line.cod_benef
+
         return vals
 
     @api.multi
@@ -302,3 +304,4 @@ class AccountInvoiceLine(models.Model):
     declaration_line_ids = fields.One2many(
         'br_account.import.declaration.line',
         'invoice_line_id', string='Adições da DI')
+    cod_benef = fields.Char(string='Cód. de beneficio fiscal')

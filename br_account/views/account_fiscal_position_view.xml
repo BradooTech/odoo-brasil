@@ -17,6 +17,7 @@
                     <group>
                         <field name="cst_icms" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
                         <field name="csosn_icms" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
+                        <field name="cod_benef" attrs="{'invisible': [('domain', '!=', 'icms')]}" />
                         <field name="cst_ipi" attrs="{'invisible': [('domain', '!=', 'ipi')]}" />
                         <field name="cst_pis" attrs="{'invisible': [('domain', '!=', 'pis')]}" />
                         <field name="cst_cofins" attrs="{'invisible': [('domain', '!=', 'cofins')]}" />

@@ -531,6 +531,9 @@ class AccountInvoiceLine(models.Model):
             ('12','12 - Órgão de fomento e desenv. agrop.')],
             default=False)
 
+    cod_benef = fields.Char(
+        string='Cód. de beneficio fiscal')
+
     def _update_tax_from_ncm(self):
         if self.product_id:
             ncm = self.product_id.fiscal_classification_id

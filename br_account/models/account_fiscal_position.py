@@ -81,6 +81,9 @@ class AccountFiscalPositionTaxRule(models.Model):
             ('12','12 - Órgão de fomento e desenv. agrop.')],
             default=False)
 
+    cod_benef = fields.Char(string='Cód. de beneficio fiscal')
+
+
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
 
@@ -183,6 +186,7 @@ class AccountFiscalPosition(models.Model):
                 ('%s_rule_id' % type_tax): rules[0],
                 'cfop_id': rules[0].cfop_id,
                 ('tax_%s_id' % type_tax): rules[0].tax_id,
+                'cod_benef': rules[0].cod_benef,
                 # ICMS
                 'icms_cst_normal': rules[0].cst_icms,
                 'icms_aliquota_reducao_base': rules[0].reducao_icms,
