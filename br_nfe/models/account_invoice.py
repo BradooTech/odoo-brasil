@@ -152,7 +152,7 @@ class AccountInvoice(models.Model):
         # Validação de ambiente NFe e NFCe, agora em campos distintos
         if serie_id.fiscal_document_id.code == '55':
             res['ambiente'] = 'homologacao' if inv.company_id.tipo_ambiente == '2' else 'producao'
-        else:
+        elif serie_id.fiscal_document_id.code == '65':
             res['ambiente'] = inv.company_id.tipo_ambiente_nfce
         # Indicador Consumidor Final
         if inv.commercial_partner_id.is_company:
