@@ -10,12 +10,12 @@
                 <field name="ambiente_nfe" invisible="1" />
                 <field name="ambiente_nfce" invisible="1" />
                 
-                <div class="alert alert-warning" role="alert" style="margin-bottom:0px;"
-                    attrs="{'invisible': ['|', ('ambiente_nfe', '==', '1'), ('model', 'not in', ('55'))]}">
+                <div name="ambiente_nfe" class="alert alert-warning" role="alert" style="margin-bottom:0px;"
+                    attrs="{'invisible': [('model', 'not in', ('55'))]}">
                     A NFe está em ambiente de <b><field name="ambiente" class="oe_inline"/></b>
                 </div>
-                <div class="alert alert-warning" role="alert" style="margin-bottom:0px;"
-                    attrs="{'invisible': ['|', ('ambiente_nfce', '==', '1'), ('model', 'not in', ('65'))]}">
+                <div name="ambiente_nfce" class="alert alert-warning" role="alert" style="margin-bottom:0px;"
+                    attrs="{'invisible': [('model', 'not in', ('65'))]}">
                     A NFCe está em ambiente de <b><field name="ambiente" class="oe_inline"/></b>
                 </div>
             </div>
