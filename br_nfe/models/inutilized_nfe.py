@@ -16,7 +16,7 @@ try:
     from pytrustnfe.nfe import inutilizar_nfe
     from pytrustnfe.certificado import Certificado
 except ImportError:
-    _logger.error('Cannot import pytrustnfe', exc_info=True)
+    _logger.debug('Cannot import pytrustnfe', exc_info=True)
 
 STATE = {'edit': [('readonly', False)], 'draft': [('readonly', False)]}
 
@@ -46,12 +46,6 @@ class InutilizedNfe(models.Model):
                             required=True, readonly=True, states=STATE)
     code = fields.Char(string="Código", size=10)
     motive = fields.Char(string="Motivo", size=300)
-    sent_xml = fields.Binary(string="Xml Envio", readonly=True)
-    sent_xml_name = fields.Char(string=u"Xml Envio", size=30, readonly=True)
-    received_xml = fields.Binary(string=u"Xml Recebimento", readonly=True)
-    received_xml_name = fields.Char(
-        string=u"Xml Recebimento", size=30, readonly=True)
-
 
     @api.model
     def create(self, vals):
@@ -63,8 +57,7 @@ class InutilizedNfe(models.Model):
         docs = self.env['invoice.eletronic'].search([
             ('model', '=', self.serie.fiscal_document_id.code),
             ('numero', '>=', self.numeration_start),
-            ('numero', '<=', self.numeration_end),
-            ('company_id', '=', self.env.user.company_id.id),
+            ('numero', '<=', self.numeration_end)
         ])
         if docs:
             errors.append('Não é possível invalidar essa série pois já existem'
@@ -93,7 +86,7 @@ class InutilizedNfe(models.Model):
             raise UserError('\n'.join(errors))
         return True
 
-    def _prepare_obj(self, company, estado):
+    def _prepare_obj(self, company, estado, ambiente):
         ano = str(datetime.now().year)[2:]
         serie = self.serie.code
         cnpj = re.sub(r'\D', '', company.cnpj_cpf)
@@ -122,6 +115,10 @@ class InutilizedNfe(models.Model):
         }
 
     def _handle_response(self, response):
+        self._create_attachment(
+            'inutilizacao-envio', self, response['sent_xml'])
+        self._create_attachment(
+            'inutilizacao-recibo', self, response['received_xml'])
         inf_inut = response['object'].getchildren()[0].infInut
         status = inf_inut.cStat
         if status == 102:
@@ -130,38 +127,17 @@ class InutilizedNfe(models.Model):
                 'code': inf_inut.cStat,
                 'motive': inf_inut.xMotivo
             })
-            self._create_attachment(
-                'inutilizacao-envio', self, response['sent_xml'])
-            self._create_attachment(
-                'inutilizacao-recibo', self, response['received_xml'])
         else:
-            self.write({
-                'state': 'error',
-                'code': inf_inut.cStat,
-                'motive': inf_inut.xMotivo,
-                'sent_xml': base64.b64encode(
-                    response['sent_xml'].encode('utf-8')),
-                'sent_xml_name': 'inutilizacao-envio.xml',
-                'received_xml': base64.b64encode(
-                    response['received_xml'].encode('utf-8')),
-                'received_xml_name': 'inutilizacao-retorno.xml',
-            })
-            return {
-                'name': 'Inutilização de NFe',
-                'type': 'ir.actions.act_window',
-                'res_model': 'invoice.eletronic.inutilized',
-                'res_id': self.id,
-                'view_type': 'form',
-                'view_mode': 'form',
-                'target': 'new',
-            }
-
+            msg = '%s - %s' % (inf_inut.cStat, inf_inut.xMotivo)
+            raise UserError(msg)
 
     def send_sefaz(self):
         company = self.env.user.company_id
+        ambiente = company.tipo_ambiente
         estado = company.state_id.ibge_code
 
-        obj = self._prepare_obj(company=company, estado=estado)
+        obj = self._prepare_obj(company=company, estado=estado,
+                                ambiente=ambiente)
 
         cert = company.with_context({'bin_size': False}).nfe_a1_file
         cert_pfx = base64.decodestring(cert)
@@ -169,14 +145,13 @@ class InutilizedNfe(models.Model):
 
         resposta = inutilizar_nfe(certificado, obj=obj, estado=estado,
                                   ambiente=int(obj['ambiente']), modelo=obj['modelo'])
+
         return self._handle_response(response=resposta)
 
     @api.multi
     def action_send_inutilization(self):
         self.validate_hook()
-        retorno = self.send_sefaz()
-        if retorno:
-            return retorno
+        self.send_sefaz()
         return self.env.ref(
             'br_nfe.action_invoice_eletronic_inutilized').read()[0]
 
