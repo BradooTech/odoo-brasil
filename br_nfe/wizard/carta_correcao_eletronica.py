@@ -15,7 +15,7 @@ try:
     from pytrustnfe.nfe import recepcao_evento_carta_correcao
     from pytrustnfe.certificado import Certificado
 except ImportError:
-    _logger.error('Cannot import pytrustnfe', exc_info=True)
+    _logger.debug('Cannot import pytrustnfe', exc_info=True)
 
 COND_USO = "A Carta de Correcao e disciplinada pelo paragrafo 1o-A do art. 7o \
 do Convenio S/N, de 15 de dezembro de 1970 e pode ser utilizada para \
@@ -29,6 +29,7 @@ emissao ou de saida."
 
 class WizardCartaCorrecaoEletronica(models.TransientModel):
     _name = 'wizard.carta.correcao.eletronica'
+    _description = 'Carta de Correção Eletrônica'
 
     @api.depends('eletronic_doc_id')
     def _default_sequence_number(self):
@@ -64,22 +65,17 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
         dt_evento = datetime.utcnow()
         dt_evento = pytz.utc.localize(dt_evento).astimezone(tz)
 
-        if self.eletronic_doc_id.model == '55':
-            ambiente = int(self.eletronic_doc_id.company_id.tipo_ambiente)
-        else:
-            ambiente = self.eletronic_doc_id.company_id.tipo_ambiente_nfce
-
         carta = {
             'idLote': self.id,
             'estado':  self.eletronic_doc_id.company_id.state_id.ibge_code,
-            'ambiente': ambiente,
+            'ambiente': int(self.eletronic_doc_id.company_id.tipo_ambiente),
             'modelo': self.eletronic_doc_id.model,
             'eventos': [{
                 'invoice_id': self.eletronic_doc_id.id,
                 'CNPJ': re.sub(
                     "[^0-9]", "", self.eletronic_doc_id.company_id.cnpj_cpf),
                 'cOrgao':  self.eletronic_doc_id.company_id.state_id.ibge_code,
-                'tpAmb': ambiente,
+                'tpAmb': self.eletronic_doc_id.company_id.tipo_ambiente,
                 'dhEvento':  dt_evento.strftime('%Y-%m-%dT%H:%M:%S-03:00'),
                 'chNFe': self.eletronic_doc_id.chave_nfe,
                 'xCorrecao': self.correcao,

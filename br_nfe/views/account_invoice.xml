@@ -16,10 +16,6 @@
                     attrs="{'invisible': ['|', ('ambiente_nfe', '==', '1'), ('invoice_model', 'not in', ('55', '65'))]}">
                     A NFe está em ambiente de <b><field name="ambiente_nfe" class="oe_inline"/></b>
                 </div>
-                <!-- <div class="alert alert-warning" role="alert" style="margin-bottom:0px;"
-                    attrs="{'invisible': ['|', ('ambiente_nfce', '==', '1'), ('invoice_model', 'not in', ('65'))]}">
-                    A NFCe está em ambiente de <b><field name="ambiente_nfce" class="oe_inline"/></b>
-                </div> -->
                 <div class="alert alert-success" role="alert" style="margin-bottom:0px;" attrs="{'invisible': [('sending_nfe', '==', False)]}">
                     Sua <b>NFe de número <field name="nfe_number" class="oe_inline"/></b> está na fila de envio.
                     <button name="action_view_edocs" type="object" class="label label-primary"

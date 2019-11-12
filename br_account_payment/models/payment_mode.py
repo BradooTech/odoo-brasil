@@ -11,6 +11,9 @@ class PaymentMode(models.Model):
     _order = 'name'
 
     name = fields.Char(string='Name', required=True, translate=True)
+    type = fields.Selection(
+        [('receivable', 'Recebível'), ('payable', 'Pagável')],
+        string="Tipo de Transação", default='receivable')
     company_id = fields.Many2one(
         'res.company', string='Company', required=True, ondelete='restrict',
         default=lambda self: self.env['res.company']._company_default_get(

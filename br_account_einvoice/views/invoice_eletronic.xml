@@ -29,6 +29,7 @@
                                     <field name="ncm" />
                                     <field name="tributos_estimados" />
                                     <field name="indicador_total" />
+                                    <field name="pedido_compra" />
                                     <field name="item_pedido_compra" />
                                 </group>
                             </group>
@@ -180,6 +181,8 @@
                                 <field name="invoice_id"/>
                                 <field name="partner_id"/>
                                 <field name="partner_shipping_id"/>
+                                <field name="data_agendada"/>
+<!--                                <field name="schedule_user_id" />-->
                             </group>
                             <group>
                                 <field name="tipo_operacao" />
@@ -319,7 +322,16 @@
             <field name="model">invoice.eletronic</field>
             <field name="arch" type="xml">
                 <search>
+                    <filter string="Notas com problemas" domain="[('state','=', 'error')]" name="error"/>
+                    <separator orientation="vertical"/>
                     <field name="invoice_id"/>
+                    <field name="partner_id"/>
+                    <field name="numero" />
+                    <group expand="0" string="Agrupar por...">
+                        <filter name="group_partner" string="Parceiro" domain="[]" context="{'group_by':'partner_id'}"/>
+                        <filter name="group_date" string="Data de Emissão" domain="[]" context="{'group_by':'data_emissao'}"/>
+                        <filter name="group_state" string="Situação" domain="[]" context="{'group_by':'state'}"/>
+                   </group>
                 </search>
             </field>
         </record>
