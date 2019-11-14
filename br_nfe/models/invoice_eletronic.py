@@ -268,7 +268,8 @@ class InvoiceEletronic(models.Model):
                     errors.append(u'%s - CST do PIS' % prod)
                 if not eletr.cofins_cst:
                     errors.append(u'%s - CST do Cofins' % prod)
-        # NF-e
+
+        # For NFe Only
         if self.model == '55':
             if not self.fiscal_position_id:
                 errors.append(u'Configure a posição fiscal')
@@ -333,6 +334,7 @@ class InvoiceEletronic(models.Model):
             'nItemPed': item.item_pedido_compra or '',
             **({'cBenef': item.cod_benef} if item.cod_benef else {}),
         }
+
         di_vals = []
         for di in item.import_declaration_ids:
             adicoes = []
@@ -454,7 +456,6 @@ class InvoiceEletronic(models.Model):
         if self.model not in ('55', '65'):
             return res
 
-        # dt_emissao = datetime.strptime(self.data_emissao, DTFT) - timedelta(hours=3)
         tz = timezone(self.env.user.tz)
         dt_emissao = datetime.now(tz).replace(microsecond=0).isoformat()
         dt_saida = fields.Datetime.from_string(self.data_entrada_saida)
@@ -969,8 +970,6 @@ SEM VALOR FISCAL'
            'done', 'denied', 'cancel'):
             return
 
-        # self.state = 'error'
-        # self.data_emissao = datetime.now()
         _logger.info('Sending NF-e (%s) (%.2f) - %s' % (
             self.numero, self.valor_final, self.partner_id.name))
         

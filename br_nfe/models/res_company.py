@@ -21,6 +21,9 @@ class ResCompany(models.Model):
         ], string=u"Cabeçalho Danfe", default='vertical')
 
     # NFC-e
+    tipo_ambiente_nfce = fields.Selection(
+        [('producao', u'Produção'), ('homologacao', u'Homologação')],
+        string="Ambiente NFCe", default='homologacao')
     id_token_nfce = fields.Char(string="Id Token NFCE")
     token_nfce = fields.Char(string=u"Token NFCe")
     nfe_sinc = fields.Boolean(string="Aceita envio síncrono")
