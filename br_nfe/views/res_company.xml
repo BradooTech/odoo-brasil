@@ -38,7 +38,7 @@
                         <field name="state_id" domain="[('country_id', '=', parent.country_id)]" />
                     </tree>
                 </field>
-            </field>
+<!--            </field>-->
         </field>
     </record>
 </odoo>
