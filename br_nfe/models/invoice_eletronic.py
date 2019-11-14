@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -12,6 +11,7 @@ from datetime import datetime
 from pytz import timezone
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 from odoo.addons import decimal_precision as dp
 
 _logger = logging.getLogger(__name__)
@@ -214,7 +214,6 @@ class InvoiceEletronic(models.Model):
     amount_full_paid = fields.Monetary(string='Valor pago')
     troco = fields.Monetary(string='Troco')
 
-
     # Documentos Relacionados
     fiscal_document_related_ids = fields.One2many(
         'br_account.document.related', 'invoice_eletronic_id',
@@ -274,7 +273,7 @@ class InvoiceEletronic(models.Model):
             if not self.fiscal_position_id:
                 errors.append(u'Configure a posição fiscal')
             if self.company_id.accountant_id and not \
-                    self.company_id.accountant_id.cnpj_cpf:
+               self.company_id.accountant_id.cnpj_cpf:
                 errors.append(u'Emitente / CNPJ do escritório contabilidade')
         # NFC-e
         if self.model == '65':
@@ -314,10 +313,10 @@ class InvoiceEletronic(models.Model):
             'xProd': xProd,
             'NCM': re.sub('[^0-9]', '', item.ncm or '00')[:8],
             'CFOP': item.cfop,
-            'uCom': '{:.6}'.format(item.uom_id.name) or '',
+            'uCom': '{:.6}'.format(item.uom_id.name or ''),
             'qCom': qty_frmt.format(item.quantidade),
             'vUnCom': price_frmt.format(item.preco_unitario),
-            'vProd': "%.02f" % item.valor_bruto,
+            'vProd':  "%.02f" % item.valor_bruto,
             'cEANTrib': item.product_id.barcode or 'SEM GTIN',
             'uTrib': '{:.6}'.format(item.uom_id.name or ''),
             'qTrib': qty_frmt.format(item.quantidade),
@@ -329,7 +328,7 @@ class InvoiceEletronic(models.Model):
             if item.outras_despesas else '',
             'indTot': item.indicador_total,
             'cfop': item.cfop,
-            'CEST': re.sub('[^0-9]', '', item.product_id.cest or ''),
+            'CEST': re.sub('[^0-9]', '', item.cest or ''),
             'xPed': item.pedido_compra or invoice.pedido_compra or '',
             'nItemPed': item.item_pedido_compra or '',
             **({'cBenef': item.cod_benef} if item.cod_benef else {}),
@@ -348,12 +347,15 @@ class InvoiceEletronic(models.Model):
                     'nDraw': adi.drawback_number or '',
                 })
 
+            dt_registration = datetime.strptime(
+                di.date_registration, DATE_FORMAT)
+            dt_release = datetime.strptime(di.date_release, DATE_FORMAT)
             di_vals.append({
                 'nDI': di.name,
-                'dDI': di.date_registration.strftime('%Y-%m-%d'),
+                'dDI': dt_registration.strftime('%Y-%m-%d'),
                 'xLocDesemb': di.location,
                 'UFDesemb': di.state_id.code,
-                'dDesemb': di.date_release.strftime('%Y-%m-%d'),
+                'dDesemb': dt_release.strftime('%Y-%m-%d'),
                 'tpViaTransp': di.type_transportation,
                 'vAFRMM': "%.02f" % di.afrmm_value if di.afrmm_value else '',
                 'tpIntermedio': di.type_import,
@@ -388,8 +390,8 @@ class InvoiceEletronic(models.Model):
         }
         if item.tipo_produto == 'service':
             retencoes = item.pis_valor_retencao + \
-                        item.cofins_valor_retencao + item.inss_valor_retencao + \
-                        item.irrf_valor_retencao + item.csll_valor_retencao
+                item.cofins_valor_retencao + item.inss_valor_retencao + \
+                item.irrf_valor_retencao + item.csll_valor_retencao
             imposto.update({
                 'ISSQN': {
                     'vBC': "%.02f" % item.issqn_base_calculo,
@@ -667,35 +669,35 @@ SEM VALOR FISCAL'
         if self.valor_servicos > 0.0:
             issqn_total = {
                 'vServ': "%.02f" % self.valor_servicos
-                    if self.valor_servicos else "",
+                if self.valor_servicos else "",
                 'vBC': "%.02f" % self.valor_bc_issqn
-                    if self.valor_bc_issqn else "",
+                if self.valor_bc_issqn else "",
                 'vISS': "%.02f" % self.valor_issqn if self.valor_issqn else "",
                 'vPIS': "%.02f" % self.valor_pis_servicos
-                    if self.valor_pis_servicos else "",
+                if self.valor_pis_servicos else "",
                 'vCOFINS': "%.02f" % self.valor_cofins_servicos
-                    if self.valor_cofins_servicos else "",
+                if self.valor_cofins_servicos else "",
                 'dCompet': dt_emissao[:10],
                 'vDeducao': "",
                 'vOutro': "",
                 'vISSRet': "%.02f" % self.valor_retencao_issqn
-                    if self.valor_retencao_issqn else '',
+                if self.valor_retencao_issqn else '',
             }
             tributos_retidos = {
                 'vRetPIS': "%.02f" % self.valor_retencao_pis
-                    if self.valor_retencao_pis else '',
+                if self.valor_retencao_pis else '',
                 'vRetCOFINS': "%.02f" % self.valor_retencao_cofins
-                    if self.valor_retencao_cofins else '',
+                if self.valor_retencao_cofins else '',
                 'vRetCSLL': "%.02f" % self.valor_retencao_csll
-                    if self.valor_retencao_csll else '',
+                if self.valor_retencao_csll else '',
                 'vBCIRRF': "%.02f" % self.valor_bc_irrf
-                    if self.valor_retencao_irrf else '',
+                if self.valor_retencao_irrf else '',
                 'vIRRF': "%.02f" % self.valor_retencao_irrf
-                    if self.valor_retencao_irrf else '',
+                if self.valor_retencao_irrf else '',
                 'vBCRetPrev': "%.02f" % self.valor_bc_inss
-                    if self.valor_retencao_inss else '',
+                if self.valor_retencao_inss else '',
                 'vRetPrev': "%.02f" % self.valor_retencao_inss
-                    if self.valor_retencao_inss else '',
+                if self.valor_retencao_inss else '',
             }
 
         if self.transportadora_id.street:
@@ -839,7 +841,7 @@ SEM VALOR FISCAL'
                 'ISSQNtot': issqn_total,
                 'retTrib': tributos_retidos,
             })
-        if len(duplicatas) > 0 and \
+        if len(duplicatas) > 0 and\
                 self.fiscal_position_id.finalidade_emissao not in ('2', '4'):
             vals['cobr'] = cobr
             pag['tPag'] = '01' if pag['tPag'] == '90' else pag['tPag']
@@ -931,7 +933,7 @@ SEM VALOR FISCAL'
         chave_dict = {
             'cnpj': re.sub('[^0-9]', '', self.company_id.cnpj_cpf),
             'estado': self.company_id.state_id.ibge_code,
-            'emissao': self.data_emissao.strftime("%y%m"),
+            'emissao': self.data_emissao[2:4] + self.data_emissao[5:7],
             'modelo': self.model,
             'numero': self.numero,
             'serie': self.serie.code.zfill(3),
@@ -957,10 +959,9 @@ SEM VALOR FISCAL'
         if mensagens_erro:
             raise UserError(mensagens_erro)
 
-        self.sudo().write({
-            'xml_to_send': base64.encodestring(xml_enviar.encode('utf-8')),
-            'xml_to_send_name': 'nfe-enviar-%s.xml' % self.numero,
-        })
+        self.xml_to_send = base64.encodestring(
+            xml_enviar.encode('utf-8'))
+        self.xml_to_send_name = 'nfse-enviar-%s.xml' % self.numero
 
     @api.multi
     def action_send_eletronic_invoice(self):
@@ -973,9 +974,10 @@ SEM VALOR FISCAL'
         _logger.info('Sending NF-e (%s) (%.2f) - %s' % (
             self.numero, self.valor_final, self.partner_id.name))
         
+        tz = timezone(self.env.user.tz)
         self.write({
             'state': 'error',
-            'data_emissao': datetime.now()
+            'data_emissao': datetime.now(tz)
         })
 
         cert = self.company_id.with_context({'bin_size': False}).nfe_a1_file
@@ -1133,10 +1135,8 @@ SEM VALOR FISCAL'
                     base64.decodestring(nfe_envio.datas).decode('utf-8'),
                     base64.decodestring(recibo.datas).decode('utf-8'),
                 )
-                self.sudo().write({
-                    'nfe_processada': base64.encodestring(nfe_proc),
-                    'nfe_processada_name': "NFe%08d.xml" % self.numero,
-                })
+                self.nfe_processada = base64.encodestring(nfe_proc)
+                self.nfe_processada_name = "NFe%08d.xml" % self.numero
         else:
             raise UserError(_('A NFe não está validada'))
 
@@ -1265,9 +1265,7 @@ SEM VALOR FISCAL'
             nfe_proc_cancel = gerar_nfeproc_cancel(
                 nfe_processada, resp['received_xml'].encode())
             if nfe_proc_cancel:
-                self.sudo().write({
-                    'nfe_processada': base64.encodestring(nfe_proc_cancel),
-                })
+                self.nfe_processada = base64.encodestring(nfe_proc_cancel)
         else:
             message = "%s - %s" % (retorno_consulta.cStat,
                                    retorno_consulta.xMotivo)
@@ -1296,3 +1294,16 @@ SEM VALOR FISCAL'
             'view_mode': 'form',
             'target': 'new',
         }
+
+    def _get_hash_csrt(self):
+        chave_nfe = self.chave_nfe
+        csrt = self.company_id.csrt
+
+        if not csrt:
+            return
+
+        hash_csrt = "{0}{1}".format(csrt, chave_nfe)
+        hash_csrt = base64.b64encode(
+            hashlib.sha1(hash_csrt.encode()).digest())
+
+        return hash_csrt.decode("utf-8")
