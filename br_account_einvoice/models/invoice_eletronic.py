@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # © 2016 Danimar Ribeiro <danimaribeiro@gmail.com>, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
@@ -54,8 +53,9 @@ EDOCUMENT_STATE = {
 
 class InvoiceEletronic(models.Model):
     _name = 'invoice.eletronic'
-
-    _inherit = ['mail.thread']
+    _description = "Nota Fiscal"
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _order = 'id desc'
 
     code = fields.Char(
         u'Código', size=100, required=True, readonly=True, states=STATE)
@@ -69,7 +69,11 @@ class InvoiceEletronic(models.Model):
          ('error', 'Erro'),
          ('done', 'Enviado'),
          ('cancel', 'Cancelado')],
-        string=u'State', default='draft', readonly=True, states=STATE)
+        string=u'State', default='draft', readonly=True, states=STATE,
+        track_visibility='always')
+    schedule_user_id = fields.Many2one(
+        'res.users', string="Agendado por", readonly=True,
+        track_visibility='always')
     tipo_operacao = fields.Selection(
         [('entrada', 'Entrada'),
          ('saida', 'Saída')],
@@ -462,7 +466,7 @@ class InvoiceEletronic(models.Model):
         if len(errors) > 0:
             msg = u"\n".join(
                 [u"Por favor corrija os erros antes de prosseguir"] + errors)
-            self.unlink()
+            self.sudo().unlink()
             raise UserError(msg)
 
     @api.multi
@@ -519,10 +523,22 @@ class InvoiceEletronic(models.Model):
             'domain': [['id', '=', self.invoice_id.id]],
             'context': {}
         }
-        msg = 'Verifique a %s, ocorreu um problema com o envio de \
-        documento eletrônico!' % self.name
+        msg = _('Verifique a %s, ocorreu um problema com o envio de \
+                documento eletrônico!') % self.name
         self.create_uid.notify(msg, sticky=True, title="Ação necessária!",
                                warning=True, redirect=redirect)
+        try:
+            activity_type_id = self.env.ref('mail.mail_activity_data_todo').id
+        except ValueError:
+            activity_type_id = False
+        self.env['mail.activity'].create({
+            'activity_type_id': activity_type_id,
+            'note': _('Please verify the eletronic document'),
+            'user_id': self.schedule_user_id.id,
+            'res_id': self.id,
+            'res_model_id': self.env.ref(
+                'br_account_einvoice.model_invoice_eletronic').id,
+        })
 
     def _get_state_to_send(self):
         return ('draft',)
@@ -558,15 +574,8 @@ class InvoiceEletronic(models.Model):
         atts = self._find_attachment_ids_email()
         _logger.info('Sending e-mail for e-doc %s (number: %s)' % (
             self.id, self.numero))
-
-        values = mail.generate_email([self.invoice_id.id])[self.invoice_id.id]
-        subject = values.pop('subject')
-        values.pop('body')
-        values.pop('attachment_ids')
-        self.invoice_id.message_post(
-            body=values['body_html'], subject=subject,
-            message_type='email', subtype='mt_comment',
-            attachment_ids=atts + mail.attachment_ids.ids, **values)
+        self.invoice_id.message_post_with_template(
+            mail.id, attachment_ids=[(6, 0, atts + mail.attachment_ids.ids)])
 
     @api.multi
     def send_email_nfe_queue(self):

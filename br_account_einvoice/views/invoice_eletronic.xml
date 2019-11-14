@@ -159,8 +159,8 @@
             <field name="arch" type="xml">
                 <form string="Documento Eletrônico">
                     <header>
-                        <button name="action_send_eletronic_invoice" states="draft,error" string="Enviar" type="object" class="oe_highlight"/>
-                        <!-- <button name="action_back_to_draft" states="edit,error" string="Rascunho" type="object"/> -->
+                        <button name="action_send_eletronic_invoice" states="draft" string="Enviar Agora" type="object" class="oe_highlight"/>
+                        <button name="action_back_to_draft" states="edit,error" string="Repetir" type="object"/>
                         <button name="action_edit_edoc" states="draft,error" string="Habilitar Edição" type="object" groups="br_account_einvoice.group_edit_edoc"/>
                         <button name="action_cancel_document" confirm="Confirma o cancelamento do documento?" states="done" string="Cancelar" type="object"/>
                         <button name="send_email_nfe" string="Reenviar Email" type="object" attrs="{'invisible': [('state', '!=', 'done')]}" />
@@ -182,7 +182,7 @@
                                 <field name="partner_id"/>
                                 <field name="partner_shipping_id"/>
                                 <field name="data_agendada"/>
-<!--                                <field name="schedule_user_id" />-->
+<!--                                <field name="schedule_user_id" /> field with error-->
                             </group>
                             <group>
                                 <field name="tipo_operacao" />
@@ -298,6 +298,7 @@
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
                         <field name="message_ids" widget="mail_thread"/>
+                        <field name="activity_ids" widget="mail_activity"/>
                     </div>
                 </form>
             </field>
@@ -308,6 +309,13 @@
             <field name="model">invoice.eletronic</field>
             <field name="arch" type="xml">
                 <tree string="Documentos Eletrônicos">
+                    <field name="partner_id"/>
+                    <field name="invoice_id"/>
+                    <field name="numero"/>
+                    <field name="data_emissao" />
+                    <field name="valor_final" sum="Total"/>
+                    <field name="data_agendada" />
+                    <field name="schedule_user_id" />
                     <field name="state" />
                     <field name="model"/>
                     <field name="numero"/>
