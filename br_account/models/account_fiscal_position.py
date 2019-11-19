@@ -52,6 +52,7 @@ class AccountFiscalPositionTaxRule(models.Model):
                                      domain=[('domain', '=', 'icmsst')])
     icms_aliquota_credito = fields.Float(string=u"% Crédito de ICMS")
     incluir_ipi_base = fields.Boolean(string=u"Incl. IPI na base ICMS")
+    ii_na_base_ipi = fields.Boolean(string="II na base do IPI")
     reducao_icms = fields.Float(string=u"Redução de base")
     reducao_icms_st = fields.Float(string=u"Redução de base ST")
     reducao_ipi = fields.Float(string=u"Redução de base IPI")
@@ -80,6 +81,7 @@ class AccountFiscalPositionTaxRule(models.Model):
             ('9','9 - Outros'),
             ('12','12 - Órgão de fomento e desenv. agrop.')],
             default=False)
+
 
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
@@ -134,8 +136,9 @@ class AccountFiscalPosition(models.Model):
         'account.fiscal.position.tax.rule', 'fiscal_position_id',
         string=u"Regras INSS", domain=[('domain', '=', 'inss')])
     fiscal_type = fields.Selection([('saida', 'Saída'),
-                                    ('entrada', 'Entrada')],
-                                   string=u"Tipo da posição")
+                                    ('entrada', 'Entrada'),
+                                    ('import', 'Entrada Importação')],
+                                   string=u"Tipo da posição", copy=True)
 
     @api.model
     def _get_fpos_by_region(self, country_id=False, state_id=False,

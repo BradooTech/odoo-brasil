@@ -260,6 +260,7 @@ class AccountInvoice(models.Model):
         string='Valor ICMS Desoneração', digits=dp.get_precision('Account'),
         compute='_compute_amount', store=True)
 
+
     @api.onchange('fiscal_position_id')
     def _onchange_br_account_fiscal_position_id(self):
         if self.fiscal_position_id and self.fiscal_position_id.account_id:
