@@ -22,6 +22,8 @@ class ResStateCity(models.Model):
                                required=True)
     ibge_code = fields.Char(string=u'IBGE Code', size=7, copy=False)
 
+    codigo_apuracao = fields.Char(
+        string="Código da Cidade - Apuração")
 
 class ResRegion(models.Model):
     _name = 'res.region'
