@@ -801,8 +801,16 @@ SEM VALOR FISCAL'
         pag = {
             'indPag': self.payment_term_id.indPag or '0',
             'tPag': self.metodo_pagamento or '90',
-            'vPag': '0.00',
+            'vPag': '0.00'
         }
+        # Validando o tipo de pagamento (Cartão) para informar se há integração com TEF
+        if self.model == '65' and self.metodo_pagamento in ['03', '04']:
+            pag.update(
+                {'card': {
+                        'tpIntegra': 2
+                    }
+                }                    
+            )
 
         self.informacoes_complementares = self.informacoes_complementares.\
             replace('\n', '<br />')
@@ -995,10 +1003,10 @@ SEM VALOR FISCAL'
         # self.data_emissao = datetime.now()
         _logger.info('Sending NF-e (%s) (%.2f) - %s' % (
             self.numero, self.valor_final, self.partner_id.name))
-        tz = timezone(self.env.user.tz)
+        
         self.write({
             'state': 'error',
-            'data_emissao': datetime.now(tz)
+            'data_emissao': datetime.now()
         })
 
         cert = self.company_id.with_context({'bin_size': False}).nfe_a1_file
