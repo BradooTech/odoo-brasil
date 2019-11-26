@@ -52,7 +52,6 @@ class AccountFiscalPositionTaxRule(models.Model):
                                      domain=[('domain', '=', 'icmsst')])
     icms_aliquota_credito = fields.Float(string=u"% Crédito de ICMS")
     incluir_ipi_base = fields.Boolean(string=u"Incl. IPI na base ICMS")
-    ii_na_base_ipi = fields.Boolean(string="II na base do IPI")
     reducao_icms = fields.Float(string=u"Redução de base")
     reducao_icms_st = fields.Float(string=u"Redução de base ST")
     reducao_ipi = fields.Float(string=u"Redução de base IPI")

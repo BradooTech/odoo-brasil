@@ -118,6 +118,8 @@ class AccountTax(models.Model):
 
     def _compute_ipi(self, price_base):
         ipi_tax = self.filtered(lambda x: x.domain == 'ipi')
+        ii_tax = self.filtered(lambda x: x.domain == 'ii')
+
         if not ipi_tax:
             return []
         vals = self._tax_vals(ipi_tax)
@@ -127,28 +129,19 @@ class AccountTax(models.Model):
 
         base_ipi = price_base
 
-        if "valor_frete" in self.env.context:
-            base_ipi += self.env.context["valor_frete"]
-        if "valor_seguro" in self.env.context:
-            base_ipi += self.env.context["valor_seguro"]
-        if "outras_despesas" in self.env.context:
-            base_ipi += self.env.context["outras_despesas"]
-
-        try:
-            fp_id = list((self._prefetch['account.fiscal.position']))[0]
-            fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
-
-        except IndexError as e:
-            _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-            inv_id = list(self._prefetch['account.invoice'])
-            inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-            fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
-
-
-        if fp.fiscal_type == 'import':
-            # if self.filtered(lambda x: x.domain == 'ii'):
+        if ii_tax:
             ii_vals = self._compute_ii(price_base)
             base_ipi += ii_vals[0]['amount']
+
+        else:
+            if "valor_frete" in self.env.context:
+                base_ipi += self.env.context["valor_frete"]
+            if "valor_seguro" in self.env.context:
+                base_ipi += self.env.context["valor_seguro"]
+            if "outras_despesas" in self.env.context:
+                base_ipi += self.env.context["outras_despesas"]
+
+
 
         base_tax = base_ipi * (1 - (reducao_ipi / 100.0))
         vals['amount'] = ipi_tax._compute_amount(base_tax, 1.0)
@@ -162,6 +155,8 @@ class AccountTax(models.Model):
 
     def _compute_icms(self, price_base, ipi_value, ii_value, pis_value, cofins_value):
         icms_tax = self.filtered(lambda x: x.domain == 'icms')
+        ii_tax = self.filtered(lambda x: x.domain == 'ii')
+
         if not icms_tax:
             return []
         vals = self._tax_vals(icms_tax)
@@ -173,21 +168,7 @@ class AccountTax(models.Model):
         reducao_icms = 0.0
 
         # Fiscal Position Validation for Purchase Invoice Importation
-        try:
-            fp_id = list((self._prefetch['account.fiscal.position']))[0]
-            fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
-
-        except IndexError as e:
-            _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-            inv_id = list(self._prefetch['account.invoice'])
-            inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-            fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
-
-        if fp.fiscal_type == 'import':
-            # incluir_ipi = self.env.context['incluir_ipi_base']
-            # incluir_ii = self.env.context['incluir_ii_base']
-            # incluir_pis = self.env.context['incluir_pis_base']
-            # incluir_cofins = self.env.context['incluir_cofins_base']
+        if ii_tax:
             reducao_icms = self.env.context['icms_aliquota_reducao_base']
 
             # Including all taxes inside the ICMS base
@@ -204,7 +185,11 @@ class AccountTax(models.Model):
             if "outras_despesas" in self.env.context:
                 base_icms += self.env.context["outras_despesas"]
 
-            base_icms *= 1 - (reducao_icms / 100.0)
+            icms_import_base = base_icms + (1 - 0)
+            base_icms = icms_import_base
+
+
+            # base_icms *= 1 - (reducao_icms / 100.0) # Jove: for now just avoid this
 
         else:
 
@@ -247,8 +232,6 @@ class AccountTax(models.Model):
             vals['base'] = base_icms
 
         return [vals]
-
-
 
 
     def _compute_icms_st(self, price_base, ipi_value, icms_value):
