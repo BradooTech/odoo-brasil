@@ -184,12 +184,9 @@ class AccountTax(models.Model):
                 base_icms += self.env.context["valor_seguro"]
             if "outras_despesas" in self.env.context:
                 base_icms += self.env.context["outras_despesas"]
-
-            icms_import_base = base_icms + (1 - 0)
+            icms_aliq = int(icms_tax.amount) / 100
+            icms_import_base = round(base_icms / (1 - icms_aliq), 2)
             base_icms = icms_import_base
-
-
-            # base_icms *= 1 - (reducao_icms / 100.0) # Jove: for now just avoid this
 
         else:
 
