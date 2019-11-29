@@ -120,7 +120,8 @@ class BrZip(models.Model):
                      'city_id': city.id})
 
         except Exception as e:
-            _logger.error(e.message, exc_info=True)
+            if e.message:
+                _logger.error(e.message, exc_info=True)
 
     def _search_by_address(self, state_id, city_id, street):
         try:
