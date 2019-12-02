@@ -1087,13 +1087,13 @@ SEM VALOR FISCAL'
             'name': self.mensagem_retorno,
             'invoice_eletronic_id': self.id,
         })
-        self._create_attachment('nfe-envio', self, resposta['sent_xml'])
-        self._create_attachment('nfe-ret', self, resposta['received_xml'])
+        # self._create_attachment('nfe-envio', self, resposta['sent_xml'])
+        # self._create_attachment('nfe-ret', self, resposta['received_xml'])
         recibo_xml = resposta['received_xml']
         if resposta_recibo:
-            self._create_attachment('rec', self, resposta_recibo['sent_xml'])
-            self._create_attachment('rec-ret', self,
-                                    resposta_recibo['received_xml'])
+            # self._create_attachment('rec', self, resposta_recibo['sent_xml'])
+            # self._create_attachment('rec-ret', self,
+                                    # resposta_recibo['received_xml'])
             recibo_xml = resposta_recibo['received_xml']
 
         if self.codigo_retorno == '100':
@@ -1104,6 +1104,53 @@ SEM VALOR FISCAL'
                 'nfe_processada': base64.encodestring(nfe_proc),
                 'nfe_processada_name': "NFe%08d.xml" % self.numero,
             })
+            
+            attachment_obj = self.env['ir.attachment']
+            nfe_xml = nfe_proc
+            logo = base64.decodestring(self.invoice_id.company_id.logo)
+
+            tmpLogo = io.BytesIO()
+            tmpLogo.write(logo)
+            tmpLogo.seek(0)
+
+            xml_element = etree.fromstring(nfe_xml)
+            oDanfe = danfe(list_xml=[xml_element], logo=tmpLogo)
+
+            tmpDanfe = io.BytesIO()
+            oDanfe.writeto_pdf(tmpDanfe)
+
+            if danfe:
+                danfe_id = attachment_obj.create(dict(
+                    name="NFE.pdf",
+                    datas_fname="NFE.pdf",
+                    datas=base64.b64encode(tmpDanfe.getvalue()),
+                    mimetype='application/pdf',
+                    res_model='invoice.eletronic',
+                    res_id=self.id,
+                ))
+            if nfe_xml:
+                xml_id = attachment_obj.create(dict(
+                    name='xml-nfe-%s.xml' % (
+                        datetime.now().strftime('%Y-%m-%d-%H-%M')),
+                    datas_fname=self.nfe_processada_name,
+                    datas=base64.encodestring(nfe_xml),
+                    mimetype='application/xml',
+                    res_model='account.invoice',
+                    res_id=self.invoice_id.id,
+                ))
+
+                xml_id = attachment_obj.create(dict(
+                    name='xml-nfe-%s.xml' % (
+                        datetime.now().strftime('%Y-%m-%d-%H-%M')),
+                    datas_fname=self.nfe_processada_name,
+                    datas=base64.encodestring(nfe_xml),
+                    mimetype='application/xml',
+                    res_model='invoice.eletronic',
+                    res_id=self.id,
+                ))
+
+               
+
         _logger.info('NF-e (%s) was finished with status %s' % (
             self.numero, self.codigo_retorno))
 
