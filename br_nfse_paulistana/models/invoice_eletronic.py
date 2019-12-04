@@ -158,6 +158,12 @@ class InvoiceEletronic(models.Model):
             if self.informacoes_legais:
                 descricao += self.informacoes_legais + '\n'
 
+            code_ibge_prestador = '%s%s' % (city_prestador.state_id.ibge_code,
+                                    city_prestador.ibge_code)
+            
+            if code_ibge_prestador == '3550308':
+                code_ibge_prestador = ''
+
             rps = {
                 'tomador': tomador,
                 'prestador': prestador,
@@ -166,7 +172,7 @@ class InvoiceEletronic(models.Model):
                 'serie': self.serie.code or '',
                 'aliquota_atividade': '0.000',
                 'codigo_atividade': re.sub('[^0-9]', '', codigo_servico or ''),
-                'municipio_prestacao': city_prestador.name or '',
+                'municipio_prestacao': code_ibge_prestador,
                 'valor_pis': str("%.2f" % self.valor_pis),
                 'valor_cofins': str("%.2f" % self.valor_cofins),
                 'valor_csll': str("%.2f" % 0.0),
@@ -296,10 +302,22 @@ class InvoiceEletronic(models.Model):
                 'name': self.mensagem_retorno,
                 'invoice_eletronic_id': self.id,
             })
-            self._create_attachment(
-                'nfse-envio', self, resposta['sent_xml'])
-            self._create_attachment(
-                'nfse-ret', self, resposta['received_xml'])
+            
+
+            pdf_data = self.env.ref('br_nfse_paulistana.report_br_nfse_danfe').render(self.id)
+           
+            danfe_pdf = self.env['ir.attachment'].create(dict(
+                name='NFSE.pdf',
+                datas_fname='NFSE.pdf',
+                datas=base64.encodestring(pdf_data[0]),
+                mimetype='application/pdf',
+                res_model='account.invoice',
+                res_id=self.invoice_id.id,
+            ))
+            # self._create_attachment(
+            #     'nfse-envio', self, resposta['sent_xml'])
+            # self._create_attachment(
+            #     'nfse-ret', self, resposta['received_xml'])
 
     @api.multi
     def action_cancel_document(self, context=None, justificativa=None):
@@ -343,5 +361,5 @@ class InvoiceEletronic(models.Model):
             'name': self.mensagem_retorno,
             'invoice_eletronic_id': self.id,
         })
-        self._create_attachment('canc', self, resposta['sent_xml'])
-        self._create_attachment('canc-ret', self, resposta['received_xml'])
+        # self._create_attachment('canc', self, resposta['sent_xml'])
+        # self._create_attachment('canc-ret', self, resposta['received_xml'])

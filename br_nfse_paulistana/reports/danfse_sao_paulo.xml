@@ -7,7 +7,8 @@
         model="invoice.eletronic"
         report_type="qweb-pdf"
         file="br_nfse_paulistana.main_template_br_nfse_danfe"
-        name="br_nfse_paulistana.main_template_br_nfse_danfe" />
+        name="br_nfse_paulistana.main_template_br_nfse_danfe"
+        />
 
     <record id="paperformat_br_nfse_danfse" model="report.paperformat">
         <field name="name">Danfse</field>
