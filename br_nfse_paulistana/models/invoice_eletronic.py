@@ -301,6 +301,7 @@ class InvoiceEletronic(models.Model):
                 'code': self.codigo_retorno,
                 'name': self.mensagem_retorno,
                 'invoice_eletronic_id': self.id,
+                'type_event': 'Envio de NFSe',
             })
             
 
@@ -362,6 +363,7 @@ class InvoiceEletronic(models.Model):
             'code': self.codigo_retorno,
             'name': self.mensagem_retorno,
             'invoice_eletronic_id': self.id,
+            'type_event': 'Cancelamento de NFSe',
         })
         # self._create_attachment('canc', self, resposta['sent_xml'])
         # self._create_attachment('canc-ret', self, resposta['received_xml'])

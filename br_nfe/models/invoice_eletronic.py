@@ -1087,6 +1087,7 @@ SEM VALOR FISCAL'
             'code': self.codigo_retorno,
             'name': self.mensagem_retorno,
             'invoice_eletronic_id': self.id,
+            'type_event': 'Envio de NFe',
         })
         # self._create_attachment('nfe-envio', self, resposta['sent_xml'])
         # self._create_attachment('nfe-ret', self, resposta['received_xml'])
@@ -1264,6 +1265,7 @@ SEM VALOR FISCAL'
             'code': self.codigo_retorno,
             'name': self.mensagem_retorno,
             'invoice_eletronic_id': self.id,
+            'type_event': 'Cancelamento NF',
         })
         # self._create_attachment('canc', self, resp['sent_xml'])
         # self._create_attachment('canc-ret', self, resp['received_xml'])
@@ -1303,6 +1305,7 @@ SEM VALOR FISCAL'
                 'code': self.codigo_retorno,
                 'name': self.mensagem_retorno,
                 'invoice_eletronic_id': self.id,
+                'type_event': 'Recuperação de status da nota'
             })
             # self._create_attachment('canc', self, resp['sent_xml'])
             # self._create_attachment('canc-ret', self, resp['received_xml'])

@@ -544,6 +544,7 @@ class InvoiceEletronicEvent(models.Model):
         readonly=True, states=STATE)
     state = fields.Selection(
         related='invoice_eletronic_id.state', string="State")
+    type_event = fields.Char(string="Tipo do Evento")
 
 
 class InvoiceEletronicItem(models.Model):
