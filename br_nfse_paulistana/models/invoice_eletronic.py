@@ -305,19 +305,21 @@ class InvoiceEletronic(models.Model):
             
 
             pdf_data = self.env.ref('br_nfse_paulistana.report_br_nfse_danfe').render(self.id)
+            name_nfse = 'notafiscal-emitida-%08d.pdf' % self.numero
            
             danfe_pdf = self.env['ir.attachment'].create(dict(
-                name='NFSE.pdf',
-                datas_fname='NFSE.pdf',
+                name=name_nfse,
+                datas_fname=name_nfse,
                 datas=base64.encodestring(pdf_data[0]),
                 mimetype='application/pdf',
                 res_model='account.invoice',
                 res_id=self.invoice_id.id,
             ))
+
             # self._create_attachment(
             #     'nfse-envio', self, resposta['sent_xml'])
-            # self._create_attachment(
-            #     'nfse-ret', self, resposta['received_xml'])
+            self._create_attachment(
+                'nfse-ret', self, resposta['received_xml'])
 
     @api.multi
     def action_cancel_document(self, context=None, justificativa=None):

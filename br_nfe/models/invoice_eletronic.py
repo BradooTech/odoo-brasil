@@ -1113,28 +1113,28 @@ SEM VALOR FISCAL'
             logo = base64.decodestring(self.invoice_id.company_id.logo)
 
             tmpLogo = io.BytesIO()
+
             tmpLogo.write(logo)
+
             tmpLogo.seek(0)
 
             xml_element = etree.fromstring(nfe_xml)
-            if self.model == '55':
-                oDanfe = danfe(list_xml=[xml_element], logo=tmpLogo)
-                name_nf = "NFE.pdf" 
-            else:
-                oDanfe = danfce(list_xml=[xml_element], logo=tmpLogo)
-                name_nf = "NFCE.pdf" 
+            
+            oDanfe = danfe(list_xml=[xml_element], logo=tmpLogo)
 
             tmpDanfe = io.BytesIO()
+
             oDanfe.writeto_pdf(tmpDanfe)
 
-            if danfe:
+            if danfe and self.model == '55':  
+                name_nf = 'notafiscal-emitida-%08d.pdf' % self.numero
                 danfe_id = attachment_obj.create(dict(
                     name=name_nf,
                     datas_fname=name_nf,
                     datas=base64.b64encode(tmpDanfe.getvalue()),
                     mimetype='application/pdf',
-                    res_model='invoice.eletronic',
-                    res_id=self.id,
+                    res_model='account.invoice',
+                    res_id=self.invoice_id,
                 ))
 
             if nfe_xml:
@@ -1147,14 +1147,6 @@ SEM VALOR FISCAL'
                     mimetype='application/xml',
                     res_model='invoice.eletronic',
                     res_id=self.id,
-                ))
-                xml_id = attachment_obj.create(dict(
-                    name=xml_attach_name,
-                    datas_fname=nfe_name,
-                    datas=base64.encodestring(nfe_xml),
-                    mimetype='application/xml',
-                    res_model='account.invoice',
-                    res_id=self.invoice_id.id,
                 ))
 
         _logger.info('NF-e (%s) was finished with status %s' % (
@@ -1312,8 +1304,8 @@ SEM VALOR FISCAL'
                 'name': self.mensagem_retorno,
                 'invoice_eletronic_id': self.id,
             })
-            self._create_attachment('canc', self, resp['sent_xml'])
-            self._create_attachment('canc-ret', self, resp['received_xml'])
+            # self._create_attachment('canc', self, resp['sent_xml'])
+            # self._create_attachment('canc-ret', self, resp['received_xml'])
             nfe_processada = base64.decodestring(self.nfe_processada)
 
             nfe_proc_cancel = gerar_nfeproc_cancel(

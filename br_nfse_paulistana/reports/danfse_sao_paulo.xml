@@ -49,23 +49,23 @@
                     <br />
                     Secretaria Municipal de Finanças
                     <br />
-                    <t t-if="doc.state != 'done'">
+                    <t t-if="(doc.state == 'draft' or doc.state=='error')">
                         <strong style="font-size:20px;">RECIBO PROVISÓRIO DE SERVIÇOS - RPS
                         </strong>
                     </t>
-                    <t t-if="doc.state == 'done'">
+                    <t t-if="(doc.state == 'done' or doc.state == 'cancel')">
                         <strong style="font-size:20px;">NOTA FISCAL ELETRÔNICA DE SERVIÇOS - NFSe</strong><br />
                         RPS Nº <span t-field="doc.numero" /> Série API, emitido em <span t-field="doc.data_emissao" />
                     </t>
                 </div>
                 <div class="col-xs-2" style="padding:0px;">
                     <div style="border: 1px solid black; padding: 2px;">
-                        <t t-if="doc.state == 'done'">
+                        <t t-if="(doc.state == 'done' or doc.state == 'cancel')">
                             <span style="font-size:9px;">Número NFSe</span>
                             <br />
                             <strong t-field="doc.numero_nfse"></strong>
                         </t>
-                        <t t-if="doc.state != 'done'">
+                        <t t-if="(doc.state == 'draft' or doc.state=='error')">
                             <span style="font-size:9px;">Número RPS</span>
                             <br />
                             <strong t-field="doc.numero"></strong>
@@ -76,7 +76,7 @@
                         <br />
                         <strong t-field="doc.data_emissao"></strong>
                     </div>
-                    <t t-if="doc.state == 'done'">
+                    <t t-if="(doc.state == 'done' or doc.state == 'cancel')">
                         <div style="border: 1px solid black; padding: 2px;">
                             <span style="font-size:8px;">Código de verificação</span>
                             <br />

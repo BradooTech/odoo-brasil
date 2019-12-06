@@ -114,8 +114,8 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
             })
             self.eletronic_doc_id._create_attachment(
                 'cce', self.eletronic_doc_id, resposta['sent_xml'])
-            self.eletronic_doc_id._create_attachment(
-                'cce_ret', self.eletronic_doc_id, resposta['received_xml'])
+            # self.eletronic_doc_id._create_attachment(
+            #     'cce_ret', self.eletronic_doc_id, resposta['received_xml'])
 
         else:
             mensagem = "%s - %s" % (retorno.cStat, retorno.xMotivo)
