@@ -61,6 +61,7 @@ class InutilizedNfe(models.Model):
     def validate_hook(self):
         errors = []
         docs = self.env['invoice.eletronic'].search([
+            ('model', '=', self.serie.fiscal_document_id.code),
             ('numero', '>=', self.numeration_start),
             ('numero', '<=', self.numeration_end),
             ('company_id', '=', self.env.user.company_id.id),
