@@ -106,7 +106,7 @@ class InutilizedNfe(models.Model):
         if serie == '55':
             ambiente = company.tipo_ambiente
         else:
-            ambiente = company.tipo_ambiente_nfce
+            ambiente = '1' if company.tipo_ambiente_nfce == 'producao' else '2'
 
         return {
             'id': ID,
@@ -168,7 +168,7 @@ class InutilizedNfe(models.Model):
         certificado = Certificado(cert_pfx, company.nfe_a1_password)
 
         resposta = inutilizar_nfe(certificado, obj=obj, estado=estado,
-                                  ambiente=int(ambiente), modelo=obj['modelo'])
+                                  ambiente=int(obj['ambiente']), modelo=obj['modelo'])
         return self._handle_response(response=resposta)
 
     @api.multi
