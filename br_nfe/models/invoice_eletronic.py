@@ -223,6 +223,8 @@ class InvoiceEletronic(models.Model):
         'carta.correcao.eletronica.evento', 'eletronic_doc_id',
         string=u"Cartas de Correção", readonly=True, states=STATE)
 
+    iest = fields.Char(string="Inscrição Estadual")
+
     def can_unlink(self):
         res = super(InvoiceEletronic, self).can_unlink()
         if self.state == 'denied':
@@ -584,6 +586,7 @@ class InvoiceEletronic(models.Model):
                 'fone': re.sub('[^0-9]', '', self.company_id.phone or '')
             },
             'IE': re.sub('[^0-9]', '', self.company_id.inscr_est),
+            'IEST': re.sub('[^0-9]', '', self.iest),
             'CRT': self.company_id.fiscal_type,
         }
         if self.company_id.cnae_main_id and self.company_id.inscr_mun:

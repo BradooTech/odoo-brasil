@@ -53,6 +53,12 @@ class InutilizedNfe(models.Model):
         string=u"Xml Recebimento", size=30, readonly=True)
 
 
+    sent_xml = fields.Binary(string="Xml Envio", readonly=True)
+    sent_xml_name = fields.Char(string=u"Xml Envio", size=30, readonly=True)
+    received_xml = fields.Binary(string=u"Xml Recebimento", readonly=True)
+    received_xml_name = fields.Char(
+        string=u"Xml Recebimento", size=30, readonly=True)
+
     @api.model
     def create(self, vals):
         vals['state'] = 'draft'
