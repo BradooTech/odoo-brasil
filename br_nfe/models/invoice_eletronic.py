@@ -1134,7 +1134,7 @@ SEM VALOR FISCAL'
                     datas=base64.b64encode(tmpDanfe.getvalue()),
                     mimetype='application/pdf',
                     res_model='account.invoice',
-                    res_id=self.invoice_id,
+                    res_id=self.invoice_id.id,
                 ))
 
             if nfe_xml:
