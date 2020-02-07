@@ -39,10 +39,11 @@ class ResPartner(models.Model):
     district = fields.Char('District', size=32)
     number = fields.Char(u'Number', size=10)
 
-    _sql_constraints = [
-        ('res_partner_cnpj_cpf_uniq', 'unique (cnpj_cpf)',
-         _(u'This CPF/CNPJ number is already being used by another partner!'))
-    ]
+    # Jove: Anulando o sql constraint para caso específico da parada
+    # _sql_constraints = [
+    #     ('res_partner_cnpj_cpf_uniq', 'unique (cnpj_cpf)',
+    #      _(u'This CPF/CNPJ number is already being used by another partner!'))
+    # ]
 
     @api.v8
     def _display_address(self, without_company=False):
@@ -124,18 +125,20 @@ class ResPartner(models.Model):
     @api.one
     @api.constrains('inscr_est')
     def _check_ie_duplicated(self):
-        """ Check if the field inscr_est has duplicated value
-        """
-        if not self.inscr_est or self.inscr_est == 'ISENTO':
-            return True
-        partner_ids = self.search(
-            ['&', ('inscr_est', '=', self.inscr_est), ('id', '!=', self.id)])
-
-        if len(partner_ids) > 0:
-            raise ValidationError(
-                _('This State Inscription/RG number \
-                  is already being used by another partner!'))
-        return True
+        # Jove: supressão de constraint por especificidade do cliente
+        # """ Check if the field inscr_est has duplicated value
+        # """
+        # if not self.inscr_est or self.inscr_est == 'ISENTO':
+        #     return True
+        # partner_ids = self.search(
+        #     ['&', ('inscr_est', '=', self.inscr_est), ('id', '!=', self.id)])
+        #
+        # if len(partner_ids) > 0:
+        #     raise ValidationError(
+        #         _('This State Inscription/RG number \
+        #           is already being used by another partner!'))
+        # return True
+        pass
 
     @api.onchange('cnpj_cpf')
     def _onchange_cnpj_cpf(self):
