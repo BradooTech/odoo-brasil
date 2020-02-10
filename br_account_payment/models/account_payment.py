@@ -25,13 +25,6 @@ class AccountPayment(models.Model):
         self = self.with_context(move_line_to_reconcile=self.move_line_id)
         return super(AccountPayment, self)._create_payment_entry(amount)
 
-    def action_validate_invoice_payment(self):
-        if any(len(record.invoice_ids) > 1 for record in self):
-            # For multiple invoices, there is account.register.payments wizard
-            raise UserError(_("This method should only be called\
-to process a single invoice's payment."))
-        return self.post()
-
     @api.depends('partner_id', 'partner_type')
     def _compute_open_moves(self):
         for item in self:
@@ -59,9 +52,3 @@ to process a single invoice's payment."))
         action['context'] = {'search_default_partner_id': self.partner_id.id}
 
         return action
-
-    @api.multi
-    def _compute_payment_amount(self, invoices=None, currency=None):
-        super(AccountPayment, self)._compute_payment_amount(
-            invoices=invoices, currency=currency)
-        return self.move_line_id.debit or self.move_line_id.credit

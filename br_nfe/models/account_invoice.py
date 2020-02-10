@@ -2,7 +2,7 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
@@ -74,9 +74,10 @@ class AccountInvoice(models.Model):
             docs = self.env['invoice.eletronic'].search(
                 [('invoice_id', '=', item.id)])
             for doc in docs:
-                if doc.state in ('done', 'denied', 'cancel'):
-                    raise UserError('Nota fiscal já emitida para esta fatura - \
-                                    Duplique a fatura para continuar')
+                if doc.state in ('done', 'denied'):
+                    raise UserError(
+                        _('Nota fiscal já emitida para esta fatura - \
+                            Duplique a fatura para continuar'))
         return super(AccountInvoice, self).action_invoice_draft()
 
     def invoice_print(self):
@@ -121,7 +122,13 @@ class AccountInvoice(models.Model):
         res = super(AccountInvoice, self)._prepare_edoc_vals(
             inv, inv_lines, serie_id)
 
-        numero_nfe = self.action_number(serie_id)
+        # numero_nfe = self.action_number(serie_id)
+        # Feito para evitar que o número seja incrementado duas vezes
+        if 'numero' not in res:
+            numero_nfe = self.action_number(serie_id)
+        else:
+            numero_nfe = res['numero']
+        
         res['payment_mode_id'] = inv.payment_mode_id.id
         res['ind_pres'] = inv.fiscal_position_id.ind_pres
         res['finalidade_emissao'] = inv.fiscal_position_id.finalidade_emissao
@@ -147,20 +154,21 @@ class AccountInvoice(models.Model):
             res['ambiente'] = 'homologacao' if inv.company_id.tipo_ambiente == '2' else 'producao'
         elif serie_id.fiscal_document_id.code == '65':
             res['ambiente'] = inv.company_id.tipo_ambiente_nfce
-
-        res['ambiente'] = 'homologacao' \
-            if inv.company_id.tipo_ambiente == '2' else 'producao'
-
         # Indicador Consumidor Final
         if inv.commercial_partner_id.is_company:
             res['ind_final'] = '0'
         else:
             res['ind_final'] = '1'
-        res['ind_dest'] = '1'
-        if inv.company_id.state_id != inv.commercial_partner_id.state_id:
-            res['ind_dest'] = '2'
-        if inv.company_id.country_id != inv.commercial_partner_id.country_id:
-            res['ind_dest'] = '3'
+        
+        if inv.invoice_model == '65':
+            res['ind_dest'] = '1'
+        else:
+            res['ind_dest'] = '1'
+            if inv.company_id.state_id != inv.commercial_partner_id.state_id:
+                res['ind_dest'] = '2'
+            if inv.company_id.country_id != inv.commercial_partner_id.country_id:
+                res['ind_dest'] = '3'
+        
         if inv.fiscal_position_id.ind_final:
             res['ind_final'] = inv.fiscal_position_id.ind_final
 
@@ -172,7 +180,9 @@ class AccountInvoice(models.Model):
             elif inv.commercial_partner_id.state_id.code in ('AM', 'BA', 'CE',
                                                              'GO', 'MG', 'MS',
                                                              'MT', 'PE', 'RN',
-                                                             'SP', 'SE'):
+                                                             'SP'):
+                ind_ie_dest = '9'
+            elif inv.commercial_partner_id.country_id.code != 'BR':
                 ind_ie_dest = '9'
             else:
                 ind_ie_dest = '2'
@@ -181,10 +191,6 @@ class AccountInvoice(models.Model):
         if inv.commercial_partner_id.indicador_ie_dest:
             ind_ie_dest = inv.commercial_partner_id.indicador_ie_dest
         res['ind_ie_dest'] = ind_ie_dest
-        iest_id = inv.company_id.iest_ids.filtered(
-            lambda x: x.state_id == inv.commercial_partner_id.state_id)
-        if iest_id:
-            res['iest'] = iest_id.name
 
         # Duplicatas
         duplicatas = []

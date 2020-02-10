@@ -2,11 +2,8 @@
 # © 2016 Danimar Ribeiro, Trustcode
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-import logging
+
 from odoo import api, fields, models
-
-_logger = logging.getLogger(__name__)
-
 
 
 class AccountChartTemplate(models.Model):
@@ -126,7 +123,6 @@ class AccountTax(models.Model):
             reducao_ipi = self.env.context['ipi_reducao_bc']
 
         base_ipi = price_base
-
         if "valor_frete" in self.env.context:
             base_ipi += self.env.context["valor_frete"]
         if "valor_seguro" in self.env.context:
@@ -134,32 +130,14 @@ class AccountTax(models.Model):
         if "outras_despesas" in self.env.context:
             base_ipi += self.env.context["outras_despesas"]
 
-        # Neutraliza código importado de branch 12.0
-        # try:
-        #     fp_id = list((self._prefetch['account.fiscal.position']))[0]
-        #     fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
-
-        # except IndexError as e:
-        #     _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-        #     inv_id = list(self._prefetch['account.invoice'])
-        #     inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-        #     fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
-
-
-        # if fp.fiscal_type == 'import':
-        #     # if self.filtered(lambda x: x.domain == 'ii'):
-        #     ii_vals = self._compute_ii(price_base)
-        #     base_ipi += ii_vals[0]['amount']
-
         base_tax = base_ipi * (1 - (reducao_ipi / 100.0))
         vals['amount'] = ipi_tax._compute_amount(base_tax, 1.0)
-        if 'ipi_base_calculo_manual' in self.env.context and \
+        if 'ipi_base_calculo_manual' in self.env.context and\
                 self.env.context['ipi_base_calculo_manual'] > 0:
             vals['base'] = self.env.context['ipi_base_calculo_manual']
         else:
             vals['base'] = base_tax
         return [vals]
-
 
     def _compute_icms(self, price_base, ipi_value, ii_value, pis_value, cofins_value):
         icms_tax = self.filtered(lambda x: x.domain == 'icms')
@@ -172,44 +150,6 @@ class AccountTax(models.Model):
         incluir_pis = False
         incluir_cofins = False
         reducao_icms = 0.0
-
-        # Neutraliza código importado de branch 12.0
-        # Fiscal Position Validation for Purchase Invoice Importation
-        # try:
-        #     fp_id = list((self._prefetch['account.fiscal.position']))[0]
-        #     fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
-
-        # except IndexError as e:
-        #     _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-        #     inv_id = list(self._prefetch['account.invoice'])
-        #     inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-        #     fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
-
-        # if fp.fiscal_type == 'import':
-        #     # incluir_ipi = self.env.context['incluir_ipi_base']
-        #     # incluir_ii = self.env.context['incluir_ii_base']
-        #     # incluir_pis = self.env.context['incluir_pis_base']
-        #     # incluir_cofins = self.env.context['incluir_cofins_base']
-        #     reducao_icms = self.env.context['icms_aliquota_reducao_base']
-
-        #     # Including all taxes inside the ICMS base
-        #     base_icms += round(ipi_value, 2)
-        #     base_icms += ii_value
-        #     base_icms += round(pis_value, 2)
-        #     base_icms += round(cofins_value, 2)
-
-        #     # Other Expenses that is component of the ICMS base
-        #     if "valor_frete" in self.env.context:
-        #         base_icms += self.env.context["valor_frete"]
-        #     if "valor_seguro" in self.env.context:
-        #         base_icms += self.env.context["valor_seguro"]
-        #     if "outras_despesas" in self.env.context:
-        #         base_icms += self.env.context["outras_despesas"]
-
-        #     base_icms *= 1 - (reducao_icms / 100.0)
-
-        # else:
-
         if 'incluir_ipi_base' in self.env.context:
             incluir_ipi = self.env.context['incluir_ipi_base']
         if 'incluir_ii_base' in self.env.context:
@@ -217,7 +157,7 @@ class AccountTax(models.Model):
         if 'incluir_pis_base' in self.env.context:
             incluir_pis = self.env.context['incluir_pis_base']
         if 'incluir_cofins_base' in self.env.context:
-            incluir_cofins = self.env.context['incluir_cofins_base']
+            incluir_cofins = self.env.context['incluir_cofins_base']            
         if "icms_aliquota_reducao_base" in self.env.context:
             reducao_icms = self.env.context['icms_aliquota_reducao_base']
 
@@ -247,11 +187,7 @@ class AccountTax(models.Model):
         else:
             vals['amount'] = icms_tax._compute_amount(base_icms, 1.0)
             vals['base'] = base_icms
-
         return [vals]
-
-
-
 
     def _compute_icms_st(self, price_base, ipi_value, icms_value):
         icmsst_tax = self.filtered(lambda x: x.domain == 'icmsst')
@@ -382,10 +318,9 @@ class AccountTax(models.Model):
         if not ii_tax:
             return []
         vals = self._tax_vals(ii_tax)
-        if "ii_base_calculo" in self.env.context and \
-                self.env.context['ii_base_calculo'] > 0:
+        if "ii_base_calculo" in self.env.context:
             price_base = self.env.context["ii_base_calculo"]
-        vals['amount'] = round(ii_tax._compute_amount(price_base, 1.0), 2)
+        vals['amount'] = ii_tax._compute_amount(price_base, 1.0)
         vals['base'] = price_base
         return [vals]
 
@@ -425,9 +360,8 @@ class AccountTax(models.Model):
             return res
 
         price_base = price_unit * quantity
-
-        ii = self._compute_ii(price_base)
         ipi = self._compute_ipi(price_base)
+        ii = self._compute_ii(price_base)
         pis = 0.0
         cofins = 0.0
 
