@@ -134,21 +134,22 @@ class AccountTax(models.Model):
         if "outras_despesas" in self.env.context:
             base_ipi += self.env.context["outras_despesas"]
 
-        try:
-            fp_id = list((self._prefetch['account.fiscal.position']))[0]
-            fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
+        # Neutraliza código importado de branch 12.0
+        # try:
+        #     fp_id = list((self._prefetch['account.fiscal.position']))[0]
+        #     fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
 
-        except IndexError as e:
-            _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-            inv_id = list(self._prefetch['account.invoice'])
-            inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-            fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
+        # except IndexError as e:
+        #     _logger.info(str(e) + ' in Fiscal Position in _prefetch')
+        #     inv_id = list(self._prefetch['account.invoice'])
+        #     inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
+        #     fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
 
 
-        if fp.fiscal_type == 'import':
-            # if self.filtered(lambda x: x.domain == 'ii'):
-            ii_vals = self._compute_ii(price_base)
-            base_ipi += ii_vals[0]['amount']
+        # if fp.fiscal_type == 'import':
+        #     # if self.filtered(lambda x: x.domain == 'ii'):
+        #     ii_vals = self._compute_ii(price_base)
+        #     base_ipi += ii_vals[0]['amount']
 
         base_tax = base_ipi * (1 - (reducao_ipi / 100.0))
         vals['amount'] = ipi_tax._compute_amount(base_tax, 1.0)
@@ -172,70 +173,71 @@ class AccountTax(models.Model):
         incluir_cofins = False
         reducao_icms = 0.0
 
+        # Neutraliza código importado de branch 12.0
         # Fiscal Position Validation for Purchase Invoice Importation
-        try:
-            fp_id = list((self._prefetch['account.fiscal.position']))[0]
-            fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
+        # try:
+        #     fp_id = list((self._prefetch['account.fiscal.position']))[0]
+        #     fp = self.env['account.fiscal.position'].search([('id', '=', fp_id)])
 
-        except IndexError as e:
-            _logger.info(str(e) + ' in Fiscal Position in _prefetch')
-            inv_id = list(self._prefetch['account.invoice'])
-            inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
-            fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
+        # except IndexError as e:
+        #     _logger.info(str(e) + ' in Fiscal Position in _prefetch')
+        #     inv_id = list(self._prefetch['account.invoice'])
+        #     inv_self = self.env['account.invoice'].search([('id', '=', inv_id)])
+        #     fp = self.env['account.fiscal.position'].search([('id', '=', inv_self.fiscal_position_id.id)])
 
-        if fp.fiscal_type == 'import':
-            # incluir_ipi = self.env.context['incluir_ipi_base']
-            # incluir_ii = self.env.context['incluir_ii_base']
-            # incluir_pis = self.env.context['incluir_pis_base']
-            # incluir_cofins = self.env.context['incluir_cofins_base']
+        # if fp.fiscal_type == 'import':
+        #     # incluir_ipi = self.env.context['incluir_ipi_base']
+        #     # incluir_ii = self.env.context['incluir_ii_base']
+        #     # incluir_pis = self.env.context['incluir_pis_base']
+        #     # incluir_cofins = self.env.context['incluir_cofins_base']
+        #     reducao_icms = self.env.context['icms_aliquota_reducao_base']
+
+        #     # Including all taxes inside the ICMS base
+        #     base_icms += round(ipi_value, 2)
+        #     base_icms += ii_value
+        #     base_icms += round(pis_value, 2)
+        #     base_icms += round(cofins_value, 2)
+
+        #     # Other Expenses that is component of the ICMS base
+        #     if "valor_frete" in self.env.context:
+        #         base_icms += self.env.context["valor_frete"]
+        #     if "valor_seguro" in self.env.context:
+        #         base_icms += self.env.context["valor_seguro"]
+        #     if "outras_despesas" in self.env.context:
+        #         base_icms += self.env.context["outras_despesas"]
+
+        #     base_icms *= 1 - (reducao_icms / 100.0)
+
+        # else:
+
+        if 'incluir_ipi_base' in self.env.context:
+            incluir_ipi = self.env.context['incluir_ipi_base']
+        if 'incluir_ii_base' in self.env.context:
+            incluir_ii = self.env.context['incluir_ii_base']
+        if 'incluir_pis_base' in self.env.context:
+            incluir_pis = self.env.context['incluir_pis_base']
+        if 'incluir_cofins_base' in self.env.context:
+            incluir_cofins = self.env.context['incluir_cofins_base']
+        if "icms_aliquota_reducao_base" in self.env.context:
             reducao_icms = self.env.context['icms_aliquota_reducao_base']
 
-            # Including all taxes inside the ICMS base
-            base_icms += round(ipi_value, 2)
+        if incluir_ipi:
+            base_icms += ipi_value
+        if incluir_ii:
             base_icms += ii_value
-            base_icms += round(pis_value, 2)
-            base_icms += round(cofins_value, 2)
+        if incluir_pis:
+            base_icms += pis_value
+        if incluir_cofins:
+            base_icms += cofins_value
 
-            # Other Expenses that is component of the ICMS base
-            if "valor_frete" in self.env.context:
-                base_icms += self.env.context["valor_frete"]
-            if "valor_seguro" in self.env.context:
-                base_icms += self.env.context["valor_seguro"]
-            if "outras_despesas" in self.env.context:
-                base_icms += self.env.context["outras_despesas"]
+        if "valor_frete" in self.env.context:
+            base_icms += self.env.context["valor_frete"]
+        if "valor_seguro" in self.env.context:
+            base_icms += self.env.context["valor_seguro"]
+        if "outras_despesas" in self.env.context:
+            base_icms += self.env.context["outras_despesas"]
 
-            base_icms *= 1 - (reducao_icms / 100.0)
-
-        else:
-
-            if 'incluir_ipi_base' in self.env.context:
-                incluir_ipi = self.env.context['incluir_ipi_base']
-            if 'incluir_ii_base' in self.env.context:
-                incluir_ii = self.env.context['incluir_ii_base']
-            if 'incluir_pis_base' in self.env.context:
-                incluir_pis = self.env.context['incluir_pis_base']
-            if 'incluir_cofins_base' in self.env.context:
-                incluir_cofins = self.env.context['incluir_cofins_base']
-            if "icms_aliquota_reducao_base" in self.env.context:
-                reducao_icms = self.env.context['icms_aliquota_reducao_base']
-
-            if incluir_ipi:
-                base_icms += ipi_value
-            if incluir_ii:
-                base_icms += ii_value
-            if incluir_pis:
-                base_icms += pis_value
-            if incluir_cofins:
-                base_icms += cofins_value
-
-            if "valor_frete" in self.env.context:
-                base_icms += self.env.context["valor_frete"]
-            if "valor_seguro" in self.env.context:
-                base_icms += self.env.context["valor_seguro"]
-            if "outras_despesas" in self.env.context:
-                base_icms += self.env.context["outras_despesas"]
-
-            base_icms *= 1 - (reducao_icms / 100.0)
+        base_icms *= 1 - (reducao_icms / 100.0)
 
         if 'icms_base_calculo_manual' in self.env.context and\
                 self.env.context['icms_base_calculo_manual'] > 0:
