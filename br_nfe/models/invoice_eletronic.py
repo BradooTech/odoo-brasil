@@ -586,7 +586,7 @@ class InvoiceEletronic(models.Model):
                 'fone': re.sub('[^0-9]', '', self.company_id.phone or '')
             },
             'IE': re.sub('[^0-9]', '', self.company_id.inscr_est),
-            'IEST': re.sub('[^0-9]', '', self.iest),
+            **({'IEST': re.sub('[^0-9]', '', self.iest)} if self.iest else {}),
             'CRT': self.company_id.fiscal_type,
         }
         if self.company_id.cnae_main_id and self.company_id.inscr_mun:
