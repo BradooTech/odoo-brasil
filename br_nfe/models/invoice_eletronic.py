@@ -817,6 +817,14 @@ SEM VALOR FISCAL'
 
         self.informacoes_complementares = self.informacoes_complementares.\
             replace('\n', '<br />')
+        if self.valor_aproximado_tributos > 0.00:
+            valor_ibpt = self.valor_final  * self.valor_aproximado_tributos / 100
+       
+            self.informacoes_complementares += (
+                '- ' +'Total de impostos estimados: ' + str("%.2f" % valor_ibpt) +
+                '(' + str("%.2f" % self.valor_aproximado_tributos) + '%) - Fonte: IBPT'
+            )
+        
         self.informacoes_legais = self.informacoes_legais.replace(
             '\n', '<br />')
 
