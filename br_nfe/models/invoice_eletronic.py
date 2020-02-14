@@ -595,7 +595,7 @@ class InvoiceEletronic(models.Model):
                 '[^0-9]', '', self.company_id.cnae_main_id.code or '')
         dest = None
         exporta = None
-        
+
         if self.commercial_partner_id:
             partner = self.commercial_partner_id
             dest = {
@@ -614,7 +614,7 @@ class InvoiceEletronic(models.Model):
                     'CEP': re.sub('[^0-9]', '', partner.zip or ''),
                     'cPais': (partner.country_id.bc_code or '')[-4:],
                     'xPais': partner.country_id.name,
-                    'fone': re.sub('[^0-9]', '', partner.phone or '')
+                    'fone': re.sub('[^0-9]', '', partner.phone or '')[:12]
                 },
                 'indIEDest': self.ind_ie_dest,
                 'IE':  re.sub('[^0-9]', '', partner.inscr_est or ''),
@@ -853,7 +853,7 @@ SEM VALOR FISCAL'
                 'CNPJ': cnpj or '',
                 'xContato': responsavel_tecnico.child_ids[0].name or '',
                 'email': responsavel_tecnico.email or '',
-                'fone': fone,
+                'fone': fone[:12],
                 'idCSRT': self.company_id.id_token_csrt or '',
                 'hashCSRT': self._get_hash_csrt() or '',
             }
