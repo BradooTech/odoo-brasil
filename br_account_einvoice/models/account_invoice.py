@@ -251,7 +251,7 @@ class AccountInvoice(models.Model):
         return vals
 
     @api.multi
-    def invoice_validate(self):
+    def lazy_invoice_validate(self):
         res = super(AccountInvoice, self).invoice_validate()
         for item in self:
             if item.product_document_id.electronic:
@@ -279,7 +279,7 @@ class AccountInvoice(models.Model):
         return res
 
     @api.multi
-    def action_cancel(self):
+    def lazy_action_cancel(self):
         res = super(AccountInvoice, self).action_cancel()
         for item in self:
             edocs = self.env['invoice.eletronic'].search(
