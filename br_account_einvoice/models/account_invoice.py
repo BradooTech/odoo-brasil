@@ -38,7 +38,7 @@ class AccountInvoice(models.Model):
     internal_number = fields.Integer(
         'Invoice Number', readonly=True,
         states={'draft': [('readonly', False)]},
-        help=u"""Unique number of the invoice, computed
+        help="""Unique number of the invoice, computed
             automatically when the invoice is created.""")
 
     @api.multi
@@ -49,8 +49,8 @@ class AccountInvoice(models.Model):
             dummy, view_id = self.env['ir.model.data'].get_object_reference(
                 'br_account_einvoice', 'br_account_invoice_eletronic_form')
             vals = self.env['ir.actions.act_window'].browse(act_id).read()[0]
-            vals['view_id'] = (view_id, u'sped.eletronic.doc.form')
-            vals['views'][1] = (view_id, u'form')
+            vals['view_id'] = (view_id, 'sped.eletronic.doc.form')
+            vals['views'][1] = (view_id, 'form')
             vals['views'] = [vals['views'][1], vals['views'][0]]
             edoc = self.env['invoice.eletronic'].search(
                 [('invoice_id', '=', self.id)], limit=1)
@@ -67,8 +67,7 @@ class AccountInvoice(models.Model):
 
     def action_preview_danfe(self):
 
-        docs = self.env['invoice.eletronic'].search(
-            [('invoice_id', '=', self.id)])
+        docs = self.env['invoice.eletronic'].search([('invoice_id', '=', self.id)])
 
         if not docs:
             raise UserError(_('Não existe um E-Doc relacionado à esta fatura'))
@@ -102,7 +101,7 @@ class AccountInvoice(models.Model):
         action = self.env.ref(report).report_action(doc)
         return action
 
-    def _prepare_edoc_item_vals(self, line):
+    def lazy_prepare_edoc_item_vals(self, line):
         vals = {
             'name': line.name,
             'product_id': line.product_id.id,
@@ -185,7 +184,7 @@ class AccountInvoice(models.Model):
         }
         return vals
 
-    def _prepare_edoc_vals(self, invoice, inv_lines, serie_id):
+    def lazy_prepare_edoc_vals(self, invoice, inv_lines, serie_id):
         num_controle = int(''.join([str(SystemRandom().randrange(9))
                                     for i in range(8)]))
         vals = {
@@ -240,7 +239,7 @@ class AccountInvoice(models.Model):
             else:
                 total_produtos += inv_line.valor_bruto
             eletronic_items.append((0, 0,
-                                    self._prepare_edoc_item_vals(inv_line)))
+                                    self.lazy_prepare_edoc_item_vals(inv_line)))
 
         vals.update({
             'eletronic_item_ids': eletronic_items,
@@ -252,7 +251,7 @@ class AccountInvoice(models.Model):
 
     @api.multi
     def lazy_invoice_validate(self):
-        res = super(AccountInvoice, self).invoice_validate()
+        # res = super(AccountInvoice, self).invoice_validate()
         for item in self:
             if item.product_document_id.electronic:
                 if item.company_id.l10n_br_nfse_conjugada:
@@ -261,7 +260,7 @@ class AccountInvoice(models.Model):
                     inv_lines = item.invoice_line_ids.filtered(
                         lambda x: x.product_id.fiscal_type == 'product')
                 if inv_lines:
-                    edoc_vals = self._prepare_edoc_vals(
+                    edoc_vals = self.lazy_prepare_edoc_vals(
                         item, inv_lines, item.product_serie_id)
                     eletronic = self.env['invoice.eletronic'].create(edoc_vals)
                     eletronic.validate_invoice()
@@ -271,15 +270,16 @@ class AccountInvoice(models.Model):
                 inv_lines = item.invoice_line_ids.filtered(
                     lambda x: x.product_id.fiscal_type == 'service')
                 if inv_lines:
-                    edoc_vals = self._prepare_edoc_vals(
+                    edoc_vals = self.lazy_prepare_edoc_vals(
                         item, inv_lines, item.service_serie_id)
                     eletronic = self.env['invoice.eletronic'].create(edoc_vals)
                     eletronic.validate_invoice()
                     eletronic.action_post_validate()
-        return res
+        # return res
+        return
 
     @api.multi
-    def lazy_action_cancel(self):
+    def _action_cancel(self):
         res = super(AccountInvoice, self).action_cancel()
         for item in self:
             edocs = self.env['invoice.eletronic'].search(
@@ -317,4 +317,4 @@ class AccountInvoiceLine(models.Model):
         help="Se setado aqui sobrescreve o pedido de compra da fatura")
     item_pedido_compra = fields.Char(
         string="Item de compra", size=20,
-        help=u'Item do pedido de compra do cliente')
+        help='Item do pedido de compra do cliente')

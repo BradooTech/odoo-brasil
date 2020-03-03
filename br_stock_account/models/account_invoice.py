@@ -76,9 +76,8 @@ class AccountInvoice(models.Model):
     local_embarque = fields.Char('Local de Embarque', size=60)
     local_despacho = fields.Char('Local de Despacho', size=60)
 
-    def _prepare_edoc_vals(self, inv, inv_lines, serie_id):
-        res = super(AccountInvoice, self)._prepare_edoc_vals(
-            inv, inv_lines, serie_id)
+    def lazy_prepare_edoc_vals(self, inv, inv_lines, serie_id):
+        res = super(AccountInvoice, self).lazy_prepare_edoc_vals(inv, inv_lines, serie_id)
         res['valor_frete'] = inv.total_frete
         res['valor_despesas'] = inv.total_despesas
         res['valor_seguro'] = inv.total_seguro
@@ -109,9 +108,8 @@ class AccountInvoice(models.Model):
 
         return res
 
-    def _prepare_edoc_item_vals(self, invoice_line):
-        vals = super(AccountInvoice, self).\
-            _prepare_edoc_item_vals(invoice_line)
+    def lazy_prepare_edoc_item_vals(self, invoice_line):
+        vals = super(AccountInvoice, self).lazy_prepare_edoc_item_vals(invoice_line)
         vals['frete'] = invoice_line.valor_frete
         vals['seguro'] = invoice_line.valor_seguro
         vals['outras_despesas'] = invoice_line.outras_despesas
