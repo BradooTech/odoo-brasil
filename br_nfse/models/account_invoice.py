@@ -24,8 +24,7 @@ class AccountInvoice(models.Model):
         'NFS-e', size=30, compute='_compute_nfse_number', store=True)
 
     def lazy_prepare_edoc_vals(self, inv, inv_lines, serie_id):
-        res = super(AccountInvoice, self).lazy_prepare_edoc_vals(
-            inv, inv_lines, serie_id)
+        res = super(AccountInvoice, self).lazy_prepare_edoc_vals(inv, inv_lines, serie_id)
         numero_nfse = self.action_number(serie_id)
         res['nfse_eletronic'] = inv.nfse_eletronic
         res['ambiente'] = inv.ambiente_nfse

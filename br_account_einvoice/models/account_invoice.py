@@ -185,8 +185,7 @@ class AccountInvoice(models.Model):
         return vals
 
     def lazy_prepare_edoc_vals(self, invoice, inv_lines, serie_id):
-        num_controle = int(''.join([str(SystemRandom().randrange(9))
-                                    for i in range(8)]))
+        num_controle = int(''.join([str(SystemRandom().randrange(9)) for i in range(8)]))
         vals = {
             'name': invoice.number,
             'invoice_id': invoice.id,
