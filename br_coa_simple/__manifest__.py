@@ -23,5 +23,4 @@
         'data/account.account.template.csv',
         'data/account_tax_template_data.xml',
     ],
-    'active': True,
 }
