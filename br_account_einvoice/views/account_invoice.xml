@@ -5,10 +5,11 @@
         <field name="model">account.invoice</field>
         <field name="inherit_id" ref="br_account.view_br_account_invoice_form"/>
         <field name="arch" type="xml">
+            <header>
+                    <button name="lazy_invoice_validate" type="object" icon="fa-file-text-o"
+                            attrs="{'invisible': [('state', '!=', 'open')]}" class="btn btn-primary" string="Emitir NFe"/>
+            </header>
             <div name="button_box" position="inside">
-                <button name="lazy_invoice_validate" type="object" icon="fa-envelope-o"
-                        attrs="{'invisible': [('state', '!=', 'open')]}" class="btn btn-primary" string="Emitir NFe"/>
-
                 <button name="action_view_edocs" type="object" class="oe_stat_button" icon="fa-file-text-o"
                     context="{ 'search_default_invoice_id': id }"
                     attrs="{'invisible': [('total_edocs', '=', 0)]}">
@@ -27,6 +28,12 @@
         <field name="model">account.invoice</field>
         <field name="inherit_id" ref="br_account.view_br_account_invoice_supplier_form"/>
         <field name="arch" type="xml">
+<!--            <header>-->
+<!--                <xpath expr="//button[@name='action_invoice_sent']" position="before">-->
+<!--                    <button name="lazy_invoice_validate" type="object" icon="fa-envelope-o"-->
+<!--                            attrs="{'invisible': [('state', '!=', 'open')]}" class="btn btn-primary" string="Emitir NFe"/>-->
+<!--                </xpath>-->
+<!--            </header>-->
             <div name="button_box" position="inside">
                 <button name="action_view_edocs" type="object" class="oe_stat_button" icon="fa-file-text-o"
                     context="{ 'search_default_invoice_id': id }"
