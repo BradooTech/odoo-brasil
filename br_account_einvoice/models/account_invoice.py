@@ -72,10 +72,9 @@ class AccountInvoice(models.Model):
         if not docs:
             raise UserError(_('Não existe um E-Doc relacionado à esta fatura'))
 
-        # Jove: bellow we should verify if it is necessary
-        # for doc in docs:
-        #     if doc.state not in ('done', 'cancel'):
-        #         raise UserError('Nota Fiscal na fila de envio. Aguarde!')
+        for doc in docs:
+            if doc.state not in ('done', 'cancel'):
+                raise UserError('Nota Fiscal na fila de envio. Aguarde!')
 
         if len(docs) > 1:
             return {

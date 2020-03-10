@@ -65,7 +65,8 @@ class InvoiceEletronic(models.Model):
     discriminacao_servicos = fields.Char(compute='_compute_discriminacao')
 
     def issqn_due_date(self):
-        date_emition = datetime.strptime(self.data_emissao, DTFT)
+        dt_emissao = datetime.strftime(self.data_emissao, DTFT)
+        date_emition = datetime.strptime(dt_emissao, DTFT)
         next_month = date_emition + relativedelta(months=1)
         due_date = date(next_month.year, next_month.month, 10)
         if due_date.weekday() >= 5:
