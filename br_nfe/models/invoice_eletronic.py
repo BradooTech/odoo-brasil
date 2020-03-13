@@ -329,7 +329,7 @@ class InvoiceEletronic(models.Model):
             'indTot': item.indicador_total,
             'cfop': item.cfop,
             'CEST': re.sub('[^0-9]', '', item.cest or ''),
-            'xPed': invoice.pedido_compra or '',
+            'xPed': invoice.pedido_compra[:15] or '',
             'nItemPed': item.item_pedido_compra or '',
             **({'cBenef': item.cod_benef} if item.cod_benef else {}),
         }
@@ -835,7 +835,7 @@ SEM VALOR FISCAL'
 
         compras = {
             'xNEmp': self.nota_empenho or '' if self.model == '55' else '',
-            'xPed': self.pedido_compra or '' if self.model == '55' else '',
+            'xPed': self.pedido_compra[:15] or '' if self.model == '55' else '',
             'xCont': self.contrato_compra or '' if self.model == '55' else '',
         }
         
