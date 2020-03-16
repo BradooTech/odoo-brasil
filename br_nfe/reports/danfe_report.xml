@@ -5,7 +5,7 @@
             id="report_br_nfe_danfe"
             string="Impressão de Danfe"
             model="invoice.eletronic"
-            report_type="qweb-pdf"
+            report_type="qweb-html"
             file="br_nfe.main_template_br_nfe_danfe"
             name="br_nfe.main_template_br_nfe_danfe" />
 
