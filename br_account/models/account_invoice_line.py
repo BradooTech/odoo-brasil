@@ -77,15 +77,16 @@ class AccountInvoiceLine(models.Model):
         desconto = valor_bruto * self.discount / 100.0
         subtotal = valor_bruto - desconto
         taxes = False
-        self._update_invoice_line_ids()
-        if self.invoice_line_tax_ids:
-            ctx = self._prepare_tax_context()
+        if not self.product_id.nfe_skip:
+            self._update_invoice_line_ids()
+            if self.invoice_line_tax_ids:
+                ctx = self._prepare_tax_context()
 
-            tax_ids = self.invoice_line_tax_ids.with_context(**ctx)
+                tax_ids = self.invoice_line_tax_ids.with_context(**ctx)
 
-            taxes = tax_ids.compute_all(
-                price, currency, self.quantity, product=self.product_id,
-                partner=self.invoice_id.partner_id)
+                taxes = tax_ids.compute_all(
+                    price, currency, self.quantity, product=self.product_id,
+                    partner=self.invoice_id.partner_id)
 
         icms = ([x for x in taxes['taxes']
                  if x['id'] == self.tax_icms_id.id]) if taxes else []
@@ -532,7 +533,7 @@ class AccountInvoiceLine(models.Model):
             default=False)
 
     def _update_tax_from_ncm(self):
-        if self.product_id:
+        if not self.product_id.nfe_skip and self.product_id:
             ncm = self.product_id.fiscal_classification_id
             self.update({
                 'icms_st_aliquota_mva': ncm.icms_st_aliquota_mva,
@@ -545,14 +546,15 @@ class AccountInvoiceLine(models.Model):
             })
 
     def _set_taxes_from_fiscal_pos(self):
-        fpos = self.invoice_id.fiscal_position_id
-        if fpos:
-            vals = fpos.map_tax_extra_values(
-                self.company_id, self.product_id, self.invoice_id.partner_id)
+        if not self.product_id.nfe_skip:
+            fpos = self.invoice_id.fiscal_position_id
+            if fpos:
+                vals = fpos.map_tax_extra_values(
+                    self.company_id, self.product_id, self.invoice_id.partner_id)
 
-            for key, value in vals.items():
-                if value and key in self._fields:
-                    self.update({key: value})
+                for key, value in vals.items():
+                    if value and key in self._fields:
+                        self.update({key: value})
 
     def _set_taxes(self):
         super(AccountInvoiceLine, self)._set_taxes()
@@ -568,29 +570,30 @@ class AccountInvoiceLine(models.Model):
             self.tax_inss_id | other_taxes
 
     def _set_extimated_taxes(self, price):
-        service = self.product_id.service_type_id
-        ncm = self.product_id.fiscal_classification_id
+        if not self.product_id.nfe_skip:
+            service = self.product_id.service_type_id
+            ncm = self.product_id.fiscal_classification_id
 
-        if self.product_type == 'service':
-            self.tributos_estimados_federais = \
-                price * (service.federal_nacional / 100)
-            self.tributos_estimados_estaduais = \
-                price * (service.estadual_imposto / 100)
-            self.tributos_estimados_municipais = \
-                price * (service.municipal_imposto / 100)
-        else:
-            federal = ncm.federal_nacional if self.icms_origem in \
-                ('0', '3', '4', '5', '8') else ncm.federal_importado
+            if self.product_type == 'service':
+                self.tributos_estimados_federais = \
+                    price * (service.federal_nacional / 100)
+                self.tributos_estimados_estaduais = \
+                    price * (service.estadual_imposto / 100)
+                self.tributos_estimados_municipais = \
+                    price * (service.municipal_imposto / 100)
+            else:
+                federal = ncm.federal_nacional if self.icms_origem in \
+                    ('0', '3', '4', '5', '8') else ncm.federal_importado
 
-            self.tributos_estimados_federais = price * (federal / 100)
-            self.tributos_estimados_estaduais = \
-                price * (ncm.estadual_imposto / 100)
-            self.tributos_estimados_municipais = \
-                price * (ncm.municipal_imposto / 100)
+                self.tributos_estimados_federais = price * (federal / 100)
+                self.tributos_estimados_estaduais = \
+                    price * (ncm.estadual_imposto / 100)
+                self.tributos_estimados_municipais = \
+                    price * (ncm.municipal_imposto / 100)
 
-        self.tributos_estimados = self.tributos_estimados_federais + \
-            self.tributos_estimados_estaduais + \
-            self.tributos_estimados_municipais
+            self.tributos_estimados = self.tributos_estimados_federais + \
+                self.tributos_estimados_estaduais + \
+                self.tributos_estimados_municipais
 
     @api.onchange('price_subtotal')
     def _br_account_onchange_quantity(self):
@@ -598,24 +601,34 @@ class AccountInvoiceLine(models.Model):
 
     @api.onchange('product_id')
     def _br_account_onchange_product_id(self):
-        self.product_type = self.product_id.fiscal_type
-        self.icms_origem = self.product_id.origin
-        ncm = self.product_id.fiscal_classification_id
-        service = self.product_id.service_type_id
-        self.fiscal_classification_id = ncm.id
-        self.service_type_id = service.id
+        if not self.product_id.nfe_skip:
+            self.product_type = self.product_id.fiscal_type
+            self.icms_origem = self.product_id.origin
+            ncm = self.product_id.fiscal_classification_id
+            service = self.product_id.service_type_id
+            self.fiscal_classification_id = ncm.id
+            self.service_type_id = service.id
+            self._set_extimated_taxes(self.product_id.lst_price)
+        else:
+            self.product_type = self.product_id.fiscal_type
+            self.icms_origem = self.product_id.origin
+            ncm = self.product_id.fiscal_classification_id
+            service = self.product_id.service_type_id
+            self.fiscal_classification_id = ncm.id
+            self.service_type_id = service.id
 
-        self._set_extimated_taxes(self.product_id.lst_price)
+
 
     def _update_invoice_line_ids(self):
-        other_taxes = self.invoice_line_tax_ids.filtered(
-            lambda x: not x.domain)
-        self.invoice_line_tax_ids = other_taxes | self.tax_icms_id | \
-            self.tax_icms_st_id | self.tax_icms_inter_id | \
-            self.tax_icms_intra_id | self.tax_icms_fcp_id | \
-            self.tax_ipi_id | self.tax_pis_id | \
-            self.tax_cofins_id | self.tax_issqn_id | self.tax_ii_id | \
-            self.tax_csll_id | self.tax_irrf_id | self.tax_inss_id
+        if not self.product_id.nfe_skip:
+            other_taxes = self.invoice_line_tax_ids.filtered(
+                lambda x: not x.domain)
+            self.invoice_line_tax_ids = other_taxes | self.tax_icms_id | \
+                self.tax_icms_st_id | self.tax_icms_inter_id | \
+                self.tax_icms_intra_id | self.tax_icms_fcp_id | \
+                self.tax_ipi_id | self.tax_pis_id | \
+                self.tax_cofins_id | self.tax_issqn_id | self.tax_ii_id | \
+                self.tax_csll_id | self.tax_irrf_id | self.tax_inss_id
 
     @api.onchange('tax_icms_id')
     def _onchange_tax_icms_id(self):
@@ -667,7 +680,9 @@ class AccountInvoiceLine(models.Model):
 
     @api.onchange('tax_issqn_id')
     def _onchange_tax_issqn_id(self):
-        if self.tax_issqn_id:
+        if self.product_id.nfe_skip:
+            self.issqn_aliquota = 0.0
+        elif self.tax_issqn_id:
             self.issqn_aliquota = self.tax_issqn_id.amount
         self._update_invoice_line_ids()
 

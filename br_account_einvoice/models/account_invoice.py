@@ -185,6 +185,17 @@ class AccountInvoice(models.Model):
 
     def lazy_prepare_edoc_vals(self, invoice, inv_lines, serie_id):
         num_controle = int(''.join([str(SystemRandom().randrange(9)) for i in range(8)]))
+        # NFSe Split
+        nfe_skip_lines = inv_lines.filtered(lambda st: st.product_id.nfe_skip)
+        nfe_skip_subtotal = sum(nfe_skip_lines.mapped('price_subtotal'))
+        if nfe_skip_subtotal:
+            amount_total = invoice.amount_total - nfe_skip_subtotal
+            # Bellow have an undesired effect on total of the invoice
+            # invoice.update({'amount_total': invoice.amount_total - nfe_skip_subtotal,
+            #                 'total_bruto': invoice.total_bruto - nfe_skip_subtotal})
+        inv_lines = inv_lines.filtered(
+            lambda x: x.product_id.fiscal_type == 'service' and not x.product_id.nfe_skip)
+
         vals = {
             'name': invoice.number,
             'invoice_id': invoice.id,
@@ -208,9 +219,9 @@ class AccountInvoice(models.Model):
             'valor_pis': invoice.pis_value,
             'valor_cofins': invoice.cofins_value,
             'valor_ii': invoice.ii_value,
-            'valor_bruto': invoice.total_bruto,
+            'valor_bruto': amount_total if amount_total else invoice.total_bruto,
             'valor_desconto': invoice.total_desconto,
-            'valor_final': invoice.amount_total,
+            'valor_final': amount_total if amount_total else invoice.amount_total,
             'valor_bc_icms': invoice.icms_base,
             'valor_bc_icmsst': invoice.icms_st_base,
             'valor_servicos': invoice.issqn_base,
@@ -233,15 +244,15 @@ class AccountInvoice(models.Model):
         eletronic_items = []
         for inv_line in inv_lines:
             if inv_line.product_type == 'service':
-                total_servicos += inv_line.valor_bruto
+                total_servicos += amount_total if amount_total else inv_line.valor_bruto
             else:
-                total_produtos += inv_line.valor_bruto
+                total_produtos += amount_total if amount_total else inv_line.valor_bruto
             eletronic_items.append((0, 0,
                                     self.lazy_prepare_edoc_item_vals(inv_line)))
 
         vals.update({
             'eletronic_item_ids': eletronic_items,
-            'valor_servicos': total_servicos,
+            'valor_servicos': amount_total,  #  NFSe Split avoiding duplication: total_servicos,
             'valor_bruto': total_produtos,
         })
 
@@ -256,7 +267,7 @@ class AccountInvoice(models.Model):
                     inv_lines = item.invoice_line_ids
                 else:
                     inv_lines = item.invoice_line_ids.filtered(
-                        lambda x: x.product_id.fiscal_type == 'product')
+                        lambda x: x.product_id.fiscal_type == 'product' and not x.product_id.nfe_skip)
                 if inv_lines:
                     edoc_vals = self.lazy_prepare_edoc_vals(
                         item, inv_lines, item.product_serie_id)
@@ -267,6 +278,15 @@ class AccountInvoice(models.Model):
                not item.company_id.l10n_br_nfse_conjugada:
                 inv_lines = item.invoice_line_ids.filtered(
                     lambda x: x.product_id.fiscal_type == 'service')
+                # NFSe Split bellow
+                # inv_lines = item.invoice_line_ids.filtered(
+                #     lambda x: x.product_id.fiscal_type == 'service' and not x.product_id.nfe_skip)
+                # nfe_skip_lines = item.invoice_line_ids.filtered(
+                #     lambda st: st.product_id.nfe_skip)
+                # nfe_skip_subtotal = sum(nfe_skip_lines.mapped('price_subtotal'))
+                # if nfe_skip_subtotal:
+                #     item.update({'amount_total': item.amount_total - nfe_skip_subtotal,
+                #                  'total_bruto': item.total_bruto - nfe_skip_subtotal})
                 if inv_lines:
                     edoc_vals = self.lazy_prepare_edoc_vals(
                         item, inv_lines, item.service_serie_id)

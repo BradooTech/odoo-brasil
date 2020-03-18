@@ -81,6 +81,16 @@ class AccountInvoice(models.Model):
     def lazy_prepare_edoc_vals(self, inv, inv_lines, serie_id):
         res = super(AccountInvoice, self).lazy_prepare_edoc_vals(
             inv, inv_lines, serie_id)
+        # for NFse Split
+        nfe_skip_lines = inv_lines.filtered(lambda st: st.product_id.nfe_skip)
+        nfe_skip_subtotal = sum(nfe_skip_lines.mapped('price_subtotal'))
+        if nfe_skip_subtotal:
+            amount_total = inv.amount_total - nfe_skip_subtotal
+            # Bellow have an undesired effect on total of the invoice
+            # inv.update({'amount_total': inv.amount_total - nfe_skip_subtotal,
+            #                 'total_bruto': inv.total_bruto - nfe_skip_subtotal})
+        inv_lines = inv_lines.filtered(
+            lambda x: x.product_id.fiscal_type == 'service' and not x.product_id.nfe_skip)
 
         numero_nfe = self.action_number(serie_id)
         res['payment_mode_id'] = inv.payment_mode_id.id
@@ -89,9 +99,9 @@ class AccountInvoice(models.Model):
         res['informacoes_legais'] = inv.fiscal_comment
         res['informacoes_complementares'] = inv.comment
         res['numero_fatura'] = inv.number
-        res['fatura_bruto'] = inv.total_bruto
+        res['fatura_bruto'] = amount_total if amount_total else inv.total_bruto
         res['fatura_desconto'] = inv.total_desconto
-        res['fatura_liquido'] = inv.amount_total
+        res['fatura_liquido'] = amount_total if amount_total else inv.amount_total
         res['pedido_compra'] = inv.name
         res['valor_icms_uf_remet'] = inv.valor_icms_uf_remet
         res['valor_icms_uf_dest'] = inv.valor_icms_uf_dest
@@ -139,11 +149,12 @@ class AccountInvoice(models.Model):
         # Duplicatas
         duplicatas = []
         count = 1
+        # NFSe Split: Only Works for 1 parcela
         for parcela in inv.receivable_move_line_ids.sorted(lambda x: x.name):
             duplicatas.append((0, None, {
                 'numero_duplicata': "%03d" % count,
-                'data_vencimento': parcela.date_maturity,
-                'valor': parcela.credit or parcela.debit,
+                'data_vencimento': fields.Date.today(),  # NFSe Split before: parcela.date_maturity,
+                'valor': amount_total if amount_total else inv.amount_total # NFSe Split before: parcela.credit or parcela.debit,
             }))
             count += 1
         res['duplicata_ids'] = duplicatas

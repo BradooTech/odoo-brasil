@@ -26,6 +26,9 @@ class ProductTemplate(models.Model):
     fiscal_category_id = fields.Many2one(
         'br_account.fiscal.category',
         string='Categoria Fiscal')
+    nfe_skip = fields.Boolean(string='Sem Emissão de NFe?',
+                              help="Marque para ignorar na invoice e não emitir NFe para este produto",
+                              default=False)
 
     @api.onchange('type')
     def onchange_product_type(self):
