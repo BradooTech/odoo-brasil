@@ -306,7 +306,9 @@ class InvoiceEletronic(models.Model):
         qty_precis = dp.get_precision('Product Unit of Measure')(self.env.cr)
         qty_frmt = '{:.%sf}' % qty_precis[1]
         price_frmt = '{:.%sf}' % price_precis[1]
-
+        xped_aux = ''
+        if invoice.pedido_compra and (len(invoice.pedido_compra) > 15):
+            xped_aux = invoice.pedido_compra[:15]
         prod = {
             'cProd': item.product_id.default_code,
             'cEAN': item.product_id.barcode or 'SEM GTIN',
@@ -329,7 +331,7 @@ class InvoiceEletronic(models.Model):
             'indTot': item.indicador_total,
             'cfop': item.cfop,
             'CEST': re.sub('[^0-9]', '', item.cest or ''),
-            'xPed': invoice.pedido_compra[:15] or '',
+            'xPed': xped_aux or '',
             'nItemPed': item.item_pedido_compra or '',
             **({'cBenef': item.cod_benef} if item.cod_benef else {}),
         }
@@ -832,10 +834,12 @@ SEM VALOR FISCAL'
             'infCpl': self.informacoes_complementares or '',
             'infAdFisco': self.informacoes_legais or '',
         }
-
+        xped_aux = ''
+        if self.pedido_compra and (len(self.pedido_compra) > 15):
+            xped_aux = self.pedido_compra[:15] 
         compras = {
             'xNEmp': self.nota_empenho or '' if self.model == '55' else '',
-            'xPed': self.pedido_compra[:15] or '' if self.model == '55' else '',
+            'xPed': xped_aux or '' if self.model == '55' else '',
             'xCont': self.contrato_compra or '' if self.model == '55' else '',
         }
         
