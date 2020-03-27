@@ -56,7 +56,7 @@ class AccountInvoice(models.Model):
          ('15', 'Boleto Bancário'),
          ('90', 'Sem pagamento'),
          ('99', 'Outros')], 
-         default='01', string="Método de Pagamento")
+         default='90', string="Método de Pagamento")
     amount_full_paid = fields.Float(string="Valor total pago")
 
     @api.multi

@@ -208,7 +208,7 @@ class InvoiceEletronic(models.Model):
          ('15', 'Boleto Bancário'),
          ('90', 'Sem pagamento'),
          ('99', 'Outros')],
-        string="Forma de Pagamento", default="01")
+        string="Forma de Pagamento", default="90")
     amount_full_paid = fields.Monetary(string='Valor pago')
     troco = fields.Monetary(string='Troco')
 
