@@ -266,8 +266,8 @@ class InvoiceEletronic(models.Model):
         qty_frmt = '{:.%sf}' % qty_precis[1]
         price_frmt = '{:.%sf}' % price_precis[1]
         aux_xped = ''
-        if item.pedido_compra and (len(invoice.pedido_compra) > 15):
-            xped_aux = invoice.pedido_compra[:15]
+        if item.pedido_compra and (len(item.pedido_compra) > 15):
+            xped_aux = item.pedido_compra[:15]
         aux_xped2 = ''
         if invoice.pedido_compra and (len(invoice.pedido_compra) > 15):
             xped_aux = invoice.pedido_compra[:15]
@@ -728,9 +728,12 @@ class InvoiceEletronic(models.Model):
             'infCpl': self.informacoes_complementares or '',
             'infAdFisco': self.informacoes_legais or '',
         }
+        aux_ped = ''
+        if self.pedido_compra and (len(self.pedido_compra) > 15):
+            xped_aux = self.pedido_compra[:15]
         compras = {
             'xNEmp': self.nota_empenho or '',
-            'xPed': self.pedido_compra or '',
+            'xPed': aux_xped or '',
             'xCont': self.contrato_compra or '',
         }
 
