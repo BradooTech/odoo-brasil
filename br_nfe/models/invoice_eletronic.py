@@ -265,7 +265,12 @@ class InvoiceEletronic(models.Model):
         qty_precis = dp.get_precision('Product Unit of Measure')(self.env.cr)
         qty_frmt = '{:.%sf}' % qty_precis[1]
         price_frmt = '{:.%sf}' % price_precis[1]
-
+        aux_xped = ''
+        if item.pedido_compra and (len(invoice.pedido_compra) > 15):
+            xped_aux = invoice.pedido_compra[:15]
+        aux_xped2 = ''
+        if invoice.pedido_compra and (len(invoice.pedido_compra) > 15):
+            xped_aux = invoice.pedido_compra[:15]
         prod = {
             'cProd': item.product_id.default_code,
             'cEAN': item.product_id.barcode or 'SEM GTIN',
@@ -288,7 +293,7 @@ class InvoiceEletronic(models.Model):
             'indTot': item.indicador_total,
             'cfop': item.cfop,
             'CEST': re.sub('[^0-9]', '', item.product_id.cest or ''),
-            'xPed': item.pedido_compra or invoice.pedido_compra or '',
+            'xPed': xped_aux or aux_xped2 or '',
             'nItemPed': item.item_pedido_compra or '',
         }
 
