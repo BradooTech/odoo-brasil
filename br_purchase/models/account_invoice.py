@@ -63,7 +63,7 @@ class AccountInvoice(models.Model):
                 service.municipal_imposto) / 100
         else:
             nacional = ncm.federal_nacional if line.product_id.origin in \
-                ('1', '2', '3', '8') else ncm.federal_importado
+                ('0', '4') else ncm.federal_importado
             valor = line.product_id.lst_price * (
                 nacional + ncm.estadual_imposto +
                 ncm.municipal_imposto) / 100
