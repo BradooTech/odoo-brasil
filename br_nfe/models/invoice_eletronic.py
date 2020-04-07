@@ -267,10 +267,10 @@ class InvoiceEletronic(models.Model):
         price_frmt = '{:.%sf}' % price_precis[1]
         aux_xped = ''
         if item.pedido_compra and (len(item.pedido_compra) > 15):
-            xped_aux = item.pedido_compra[:15]
+            aux_xped = item.pedido_compra[:15]
         aux_xped2 = ''
         if invoice.pedido_compra and (len(invoice.pedido_compra) > 15):
-            xped_aux = invoice.pedido_compra[:15]
+            aux_xped2 = invoice.pedido_compra[:15]
         prod = {
             'cProd': item.product_id.default_code,
             'cEAN': item.product_id.barcode or 'SEM GTIN',
@@ -293,7 +293,7 @@ class InvoiceEletronic(models.Model):
             'indTot': item.indicador_total,
             'cfop': item.cfop,
             'CEST': re.sub('[^0-9]', '', item.product_id.cest or ''),
-            'xPed': xped_aux or aux_xped2 or '',
+            'xPed': aux_xped or aux_xped2 or '',
             'nItemPed': item.item_pedido_compra or '',
         }
 
@@ -498,6 +498,7 @@ class InvoiceEletronic(models.Model):
                 })
 
         ide['NFref'] = documentos
+        aux_fone = re.sub('[^0-9]', '', self.company_id.phone or '')
         emit = {
             'tipo': self.company_id.partner_id.company_type,
             'cnpj_cpf': re.sub('[^0-9]', '', self.company_id.cnpj_cpf),
@@ -516,7 +517,7 @@ class InvoiceEletronic(models.Model):
                 'CEP': re.sub('[^0-9]', '', self.company_id.zip),
                 'cPais': self.company_id.country_id.ibge_code,
                 'xPais': self.company_id.country_id.name,
-                'fone': re.sub('[^0-9]', '', self.company_id.phone or '')
+                'fone': aux_fone if len(aux_fone) < 12 else ''
             },
             'IE': re.sub('[^0-9]', '', self.company_id.inscr_est),
             'IEST': re.sub('[^0-9]', '', self.iest or ''),
@@ -530,6 +531,7 @@ class InvoiceEletronic(models.Model):
         exporta = None
         if self.commercial_partner_id:
             partner = self.commercial_partner_id
+            aux_fone = re.sub('[^0-9]', '', partner.phone or '')
             dest = {
                 'tipo': partner.company_type,
                 'cnpj_cpf': re.sub('[^0-9]', '', partner.cnpj_cpf or ''),
@@ -546,7 +548,7 @@ class InvoiceEletronic(models.Model):
                     'CEP': re.sub('[^0-9]', '', partner.zip or ''),
                     'cPais': (partner.country_id.bc_code or '')[-4:],
                     'xPais': partner.country_id.name,
-                    'fone': re.sub('[^0-9]', '', partner.phone or '')
+                    'fone': aux_fone if len(aux_fone) < 12 else ''
                 },
                 'indIEDest': self.ind_ie_dest,
                 'IE':  re.sub('[^0-9]', '', partner.inscr_est or ''),
@@ -722,15 +724,24 @@ class InvoiceEletronic(models.Model):
         }
         self.informacoes_complementares = self.informacoes_complementares.\
             replace('\n', '<br />')
+        
+        if self.valor_aproximado_tributos > 0.00:
+            valor_ibpt = self.valor_final  * self.valor_aproximado_tributos / 100
+       
+            self.informacoes_complementares += (
+                '- ' +'Total de impostos estimados: ' + str("%.2f" % valor_ibpt) +
+                '(' + str("%.2f" % self.valor_aproximado_tributos) + '%) - Fonte IBPT'
+            )
+        
         self.informacoes_legais = self.informacoes_legais.replace(
             '\n', '<br />')
         infAdic = {
             'infCpl': self.informacoes_complementares or '',
             'infAdFisco': self.informacoes_legais or '',
         }
-        aux_ped = ''
+        aux_xped = ''
         if self.pedido_compra and (len(self.pedido_compra) > 15):
-            xped_aux = self.pedido_compra[:15]
+            aux_ped = self.pedido_compra[:15]
         compras = {
             'xNEmp': self.nota_empenho or '',
             'xPed': aux_xped or '',
