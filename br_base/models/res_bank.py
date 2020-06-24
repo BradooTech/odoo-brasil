@@ -73,8 +73,8 @@ class ResPartnerBank(models.Model):
                     'acc_number': bank_account.acc_number or '',
                     'acc_number_dig': bank_account.acc_number_dig or ''
                 }
-                self.sanitized_acc_number = sanitize_account_number(
+                bank_account.sanitized_acc_number = sanitize_account_number(
                     acc_number_format % args)
             else:
-                self.sanitized_acc_number = sanitize_account_number(
+                bank_account.sanitized_acc_number = sanitize_account_number(
                     bank_account.acc_number)
