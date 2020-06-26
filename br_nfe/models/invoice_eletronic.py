@@ -603,7 +603,7 @@ class InvoiceEletronic(models.Model):
             dest = {
                 'tipo': partner.company_type,
                 'cnpj_cpf': re.sub('[^0-9]', '', partner.cnpj_cpf or ''),
-                'xNome': partner.legal_name or partner.name,
+                'xNome': partner.legal_name if partner.is_company else partner.name,
                 'enderDest': {
                     'xLgr': partner.street,
                     'nro': partner.number,
