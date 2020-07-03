@@ -32,7 +32,9 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
 
     @api.depends('eletronic_doc_id')
     def _default_sequence_number(self):
-        return len(self.eletronic_doc_id.cartas_correcao_ids) + 1
+        eletronic = self.env['invoice.eletronic'].browse(
+            self._context.get('active_id'))
+        return len(eletronic.cartas_correcao_ids) + 1
 
     state = fields.Selection([('drat', u'Provisório'), ('error', u'Erro')],
                              string=u"Situação")
@@ -107,7 +109,7 @@ class WizardCartaCorrecaoEletronica(models.TransientModel):
                 'eletronic_doc_id': self.eletronic_doc_id.id,
                 'datahora_evento': datetime.now(),
                 'tipo_evento': carta['eventos'][0]['tpEvento'],
-                'sequencial_evento': carta['eventos'][0]['nSeqEvento'],
+                'sequencial_evento': self.sequential,
                 'correcao': carta['eventos'][0]['xCorrecao'],
                 'message': retorno.retEvento.infEvento.xMotivo,
                 'protocolo': retorno.retEvento.infEvento.nProt,
