@@ -1125,17 +1125,21 @@ SEM VALOR FISCAL'
 
             attachment_obj = self.env['ir.attachment']
             nfe_xml = nfe_proc
-            logo = base64.decodestring(self.invoice_id.company_id.logo)
-
-            tmpLogo = io.BytesIO()
-
-            tmpLogo.write(logo)
-
-            tmpLogo.seek(0)
-
-            xml_element = etree.fromstring(nfe_xml)
             
-            oDanfe = danfe(list_xml=[xml_element], logo=tmpLogo)
+            xml_element = etree.fromstring(nfe_xml)
+
+            if self.invoice_id.company_id.logo:
+                logo = base64.decodestring(self.invoice_id.company_id.logo)
+                
+                tmpLogo = io.BytesIO()
+
+                tmpLogo.write(logo)
+
+                tmpLogo.seek(0)
+                
+                oDanfe = danfe(list_xml=[xml_element], logo=tmpLogo)
+            else:
+                oDanfe = danfe(list_xml=[xml_element])                
 
             tmpDanfe = io.BytesIO()
 
