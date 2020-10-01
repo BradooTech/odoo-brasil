@@ -7,6 +7,7 @@ import io
 import base64
 import logging
 import hashlib
+import pytz
 from lxml import etree
 from datetime import datetime
 from pytz import timezone
