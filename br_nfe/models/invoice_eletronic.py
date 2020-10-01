@@ -33,6 +33,11 @@ try:
 except ImportError:
     _logger.info('Cannot import pytrustnfe', exc_info=True)
 
+try:
+    import pendulum
+except ImportError:
+    _logger.info('Cannot import pendulum', exc_info=True)
+
 STATE = {'edit': [('readonly', False)]}
 
 
@@ -973,10 +978,15 @@ SEM VALOR FISCAL'
         super(InvoiceEletronic, self).action_post_validate()
         if self.model not in ('55', '65'):
             return
+
+        #A porcaria da chave nfe depende de ano+mes hard na chave, pra isso a data/hora de emissao precisa ser trazida para 
+        #GMT-3
+        data_brasil = pytz.utc.localize(self.data_emissao).astimezone('America/Sao_Paulo')
+
         chave_dict = {
             'cnpj': re.sub('[^0-9]', '', self.company_id.cnpj_cpf),
             'estado': self.company_id.state_id.ibge_code,
-            'emissao': self.data_emissao[2:4] + self.data_emissao[5:7],
+            'emissao': self.data_brasil[2:4] + self.data_brasil[5:7],
             'modelo': self.model,
             'numero': self.numero,
             'serie': self.serie.code.zfill(3),
