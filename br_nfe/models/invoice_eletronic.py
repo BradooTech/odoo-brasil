@@ -982,12 +982,11 @@ SEM VALOR FISCAL'
 
         #A porcaria da chave nfe depende de ano+mes hard na chave, pra isso a data/hora de emissao precisa ser trazida para 
         #GMT-3
-        data_brasil = pytz.utc.localize(self.data_emissao).astimezone('America/Sao_Paulo') 
-
+        emission_date = pendulum.parse(self.data_emissao).in_timezone('America/Sao_Paulo')
         chave_dict = {
             'cnpj': re.sub('[^0-9]', '', self.company_id.cnpj_cpf),
             'estado': self.company_id.state_id.ibge_code,
-            'emissao': data_brasil[2:4] + data_brasil[5:7],
+            'emissao': emission_date.strftime('%y%m'),
             'modelo': self.model,
             'numero': self.numero,
             'serie': self.serie.code.zfill(3),
