@@ -37,9 +37,14 @@
                                     <label class="col-form-label" for="email">Email</label>
                                     <input type="email" name="email" t-attf-class="form-control #{error.get('email') and 'is-invalid' or ''}" t-att-value="email or partner.email"/>
                                 </div>
-                                <div t-attf-class="form-group #{error.get('cnpj_cpf') and 'o_has_error' or ''} col-xl-6">
+                                <div t-attf-class="form-group #{error.get('cnpj_cpf') and 'o_has_error' or ''} col-xl-5">
                                     <label class="col-form-label" for="contact_name">CPF</label>
                                     <input type="text" name="cnpj_cpf" t-attf-class="form-control #{error.get('cnpj_cpf') and 'is-invalid' or ''}" t-att-value="cnpj_cpf or partner.cnpj_cpf"/>
+                                </div>
+                                <div class="form-group col-lg-1 cnpj-search" style="margin-top: 35px; padding-left: 0px;">
+                                    <a id="btn_search_cnpj" class="btn btn-primary">
+                                        <span class="fa fa-search" />
+                                    </a>
                                 </div>
                                 <div t-attf-class="form-group #{error.get('phone') and 'o_has_error' or ''} col-xl-6" id="div_phone">
                                     <label class="col-form-label" for="phone">Telefone</label>

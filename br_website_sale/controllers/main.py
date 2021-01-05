@@ -8,6 +8,7 @@ from werkzeug.exceptions import Forbidden
 import odoo.addons.website_sale.controllers.main as main
 from odoo.addons.br_base.tools.fiscal import validate_cnpj, validate_cpf
 from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.addons.receita_ws_bradoo.models import receitaws
 
 
 class L10nBrWebsiteSale(main.WebsiteSale):
@@ -141,6 +142,26 @@ class L10nBrWebsiteSale(main.WebsiteSale):
                         'city_id': zip_ids[0].city_id.id,
                         'state_id': zip_ids[0].state_id.id,
                         'country_id': zip_ids[0].country_id.id}
+
+        return {'sucesso': False}
+
+    @http.route(['/shop/cnpj_search'], type='json', auth="public",
+                methods=['POST'], website=True)
+    def search_cnpj_json(self, cnpj_cpf):
+        cnpj = re.sub('[^0-9]', '', cnpj_cpf)
+        resultado = receitaws.buscaCNPJ(cnpj)
+        if resultado != None:
+            cep = resultado.get('cep')
+            dict_zip = self.search_zip_json(cep)
+            dict_zip.update({
+                'zip': resultado.get('cep'),
+                'name': resultado.get('nome'),
+                'phone': resultado.get('telefone'),
+                'number': resultado.get('numero'),
+                'street2': resultado.get('complemento')
+            })
+            print(dict_zip)
+            return dict_zip
 
         return {'sucesso': False}
 

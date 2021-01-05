@@ -84,6 +84,31 @@ odoo.define('br_website_sale.address', function (require) {
                     }
                 }
             );
+        });   
+        
+        $('#btn_search_cnpj').click(function () {
+            var vals = {cnpj_cpf: $('input[name="cnpj_cpf"]').val()};
+            ajax.jsonRpc("/shop/cnpj_search", 'call', vals)
+                .then(function(data) {
+                    if (data.sucesso) {
+                        console.log(data.name)
+                        $('#input_state_id').val(data.state_id);
+                        $('#input_city_id').val(data.city_id);
+                        $('input[name="district"]').val(data.district);
+                        $('input[name="street"]').val(data.street);
+                        $('input[name="street2"]').val(data.street2);
+                        $('select[name="country_id"]').val(data.country_id);
+                        $('select[name="country_id"]').change();
+                        $('select[name="state_id"]').val(data.state_id);
+                        $('input[name="name"]').val(data.name);
+                        $('input[name="phone"]').val(data.phone);
+                        $('input[name="number"]').val(data.number);
+                        $('input[name="zip"]').val(data.zip);
+                    } else {
+                        alert('CNPJ não encontrado');
+                    }
+                }
+            );
         });
 
         $('#select_state_id').trigger('change');
