@@ -4,13 +4,17 @@ odoo.define('br_website_sale.address', function (require) {
     var ajax = require('web.ajax');
 
     function cnpj_cpf_mask () {
+        // $('.d-xl-inline-block').css("visibility", "hidden")
         var company = $('#radioCompany').prop('checked');
-        if (company) {
-            $('.cnpj-search').css("display", "block")
-            $('input[type=text][name=cnpj_cpf]').mask('00.000.000/0000-00');
+        console.log(company)
+        if (company == true) {
+            $('input[type=text][name=company_cnpj_cpf]').mask('00.000.000/0000-00');
+            // $('.cnpj-search').css("display", "block")
+            $('.adress_company').css("display", "block")
             $('label[for=contact_name]').text('CNPJ');
         } else {
-            $('.cnpj-search').css("display", "none")
+            $('.adress_company').css("display", "none")
+            // $('.cnpj-search').css("display", "none")
             $('input[type=text][name=cnpj_cpf]').mask('000.000.000-00');
             $('label[for=contact_name]').text('CPF');
         }
@@ -28,6 +32,7 @@ odoo.define('br_website_sale.address', function (require) {
             }
         };
         $('#select_state_id').trigger('change');
+        $('#select_company_state_id').trigger('change');
         $('input[type=text][name=zip]').mask('00000-000');
 
         $('#id_country').change(function () {
@@ -49,6 +54,25 @@ odoo.define('br_website_sale.address', function (require) {
                 });
         });
 
+        $('#id_company_country').change(function () {
+            var vals = {country_id: $(this).val()};
+            ajax.jsonRpc("/shop/get_states", 'call', vals)
+                .then(function (data) {
+                    var selected = parseInt($('#input_company_state_id').val());
+                    $('#select_company_state_id').find('option').remove().end();
+                    $('#select_company_state_id').append(
+                        '<option value="">Estado...</option>');
+                    $.each(data, function (i, item) {
+                        $('#select_company_state_id').append($('<option>', {
+                            value: item[0],
+                            text: item[1],
+                            selected: item[0]===selected?true:false,
+                        }));
+                    });
+                    $('#select_company_state_id').trigger('change');
+                });
+        });
+
         cnpj_cpf_mask();
 
         $('#select_state_id').change(function () {
@@ -61,6 +85,24 @@ odoo.define('br_website_sale.address', function (require) {
                         '<option value="">Cidade...</option>');
                     $.each(data, function (i, item) {
                         $('#select_city_id').append($('<option>', {
+                            value: item[0],
+                            text: item[1],
+                            selected: item[0]===selected?true:false,
+                        }));
+                    });
+                });
+        });
+
+        $('#select_company_state_id').change(function () {
+            var vals = { state_id: $(this).val() };
+            ajax.jsonRpc("/shop/get_cities", 'call', vals)
+                .then(function (data) {
+                    var selected = parseInt($('#input_company_city_id').val());
+                    $('#select_company_city_id').find('option').remove().end();
+                    $('#select_company_city_id').append(
+                        '<option value="">Cidade...</option>');
+                    $.each(data, function (i, item) {
+                        $('#select_company_city_id').append($('<option>', {
                             value: item[0],
                             text: item[1],
                             selected: item[0]===selected?true:false,
@@ -89,23 +131,24 @@ odoo.define('br_website_sale.address', function (require) {
         });   
         
         $('#btn_search_cnpj').click(function () {
-            var vals = {cnpj_cpf: $('input[name="cnpj_cpf"]').val()};
+            var vals = {cnpj_cpf: $('input[name="company_cnpj_cpf"]').val()};
             ajax.jsonRpc("/shop/cnpj_search", 'call', vals)
                 .then(function(data) {
                     if (data.sucesso) {
-                        console.log(data.name)
-                        $('#input_state_id').val(data.state_id);
-                        $('#input_city_id').val(data.city_id);
-                        $('input[name="district"]').val(data.district);
-                        $('input[name="street"]').val(data.street);
-                        $('input[name="street2"]').val(data.street2);
-                        $('select[name="country_id"]').val(data.country_id);
-                        $('select[name="country_id"]').change();
-                        $('select[name="state_id"]').val(data.state_id);
-                        $('input[name="name"]').val(data.name);
-                        $('input[name="phone"]').val(data.phone);
-                        $('input[name="number"]').val(data.number);
-                        $('input[name="zip"]').val(data.zip);
+                        console.log(data)
+                        $('#input_company_state_id').val(data.state_id);
+                        $('#input_company_city_id').val(data.city_id);
+                        $('input[name="company_district"]').val(data.district);
+                        $('input[name="company_street"]').val(data.street);
+                        $('input[name="company_street2"]').val(data.street2);
+                        $('select[name="company_country_id"]').val(data.country_id);
+                        $('select[name="company_country_id"]').change();
+                        $('input[name="company_name"]').val(data.name);
+                        $('input[name="company_phone"]').val(data.phone);
+                        $('input[name="company_number"]').val(data.number);
+                        $('input[name="company_zip"]').val(data.zip);
+                        $('select[name="company_state_id"]').val(data.state_id);
+                        $('select[name="company_state_id"]').change();
                     } else {
                         alert('CNPJ não encontrado');
                     }
@@ -116,7 +159,7 @@ odoo.define('br_website_sale.address', function (require) {
         $('#select_state_id').trigger('change');
         $('input[name="phone"]').mask(SPMaskBehavior, spOptions);
 
-        $('input[type=radio][name=company_type]').change(function () {
+        $('input[type=radio][name=own_company]').change(function () {
             cnpj_cpf_mask();
         });
     });

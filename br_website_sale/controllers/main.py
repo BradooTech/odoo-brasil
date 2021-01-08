@@ -160,7 +160,6 @@ class L10nBrWebsiteSale(main.WebsiteSale):
                 'number': resultado.get('numero'),
                 'street2': resultado.get('complemento')
             })
-            print(dict_zip)
             return dict_zip
 
         return {'sucesso': False}
