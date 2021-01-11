@@ -76,13 +76,14 @@ class L10nBrWebsiteSale(main.WebsiteSale):
         return errors, error_msg
 
     def values_postprocess(self, order, mode, values, errors, error_msg):
+        print(values)
         new_values, errors, error_msg = super(L10nBrWebsiteSale, self).\
             values_postprocess(order, mode, values, errors, error_msg)
         new_values['cnpj_cpf'] = values.get('cnpj_cpf', None)
         new_values['company_type'] = values.get('company_type', None)
-        is_comp = False if values.get('company_type', None) == 'person'\
-            else True
-        new_values['is_company'] = is_comp
+        # is_comp = False if values.get('company_type', None) == 'person'\
+        #     else True
+        new_values['is_company'] = False
         if 'city_id' in values and values['city_id'] != '':
             new_values['city_id'] = int(values.get('city_id', 0))
         if 'state_id' in values and values['state_id'] != '':
