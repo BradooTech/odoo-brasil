@@ -139,7 +139,7 @@
                         </div>
                         <div t-attf-class="form-group #{error.get('zip') and 'o_has_error' or ''} col-lg-5 adress_company">
                             <label class="col-form-label" for="zip">CEP</label>
-                            <input type="text" name="company_zip" t-attf-class="form-control #{error.get('zip') and 'is-invalid' or ''}" t-att-value="'zip' in checkout and checkout['zip']"/>
+                            <input type="text" name="company_zip" t-attf-class="form-control #{error.get('zip') and 'is-invalid' or ''}" t-att-value="'zip' in checkout and checkout['zip']" readonly='true'/>
                         </div>
                         <!-- <div class="form-group col-lg-1 zip-search" style="margin-top: 35px; padding-left: 0px;">
                             <a id="btn_search_zip" class="btn btn-primary">
@@ -148,7 +148,7 @@
                         </div> -->
                         <div t-attf-class="form-group #{error.get('street') and 'o_has_error' or ''} col-lg-12 adress_company">
                             <label class="col-form-label" for="street">Endereço</label>
-                            <input type="text" name="company_street" t-attf-class="form-control #{error.get('street') and 'is-invalid' or ''}" t-att-value="'street' in checkout and checkout['street']"/>
+                            <input type="text" name="company_street" t-attf-class="form-control #{error.get('street') and 'is-invalid' or ''}" t-att-value="'street' in checkout and checkout['street']" readonly='true'/>
                         </div>
                         <div t-attf-class="form-group #{error.get('number') and 'o_has_error' or ''} col-lg-6 adress_company">
                             <label class="col-form-label" for="number">Número</label>
@@ -156,7 +156,7 @@
                         </div>
                         <div t-attf-class="form-group #{error.get('district') and 'o_has_error' or ''} col-lg-6 adress_company">
                             <label class="col-form-label" for="district">Bairro</label>
-                            <input type="text" name="company_district" t-attf-class="form-control #{error.get('district') and 'is-invalid' or ''}" t-att-value="'district' in checkout and checkout['district']"/>
+                            <input type="text" name="company_district" t-attf-class="form-control #{error.get('district') and 'is-invalid' or ''}" t-att-value="'district' in checkout and checkout['district']" readonly='true'/>
                         </div>
                         <div t-attf-class="form-group #{error.get('street2') and 'o_has_error' or ''} col-lg-6 adress_company">
                             <label class="col-form-label" for="street2">Complemento</label>
@@ -164,7 +164,7 @@
                         </div>
                         <div t-attf-class="form-group #{error.get('country_id') and 'o_has_error' or ''} col-lg-6 div_country adress_company">
                             <label class="col-form-label" for="country_id">País</label>
-                            <select id="id_company_country" name="company_country_id" t-attf-class="form-control #{error.get('country_id') and 'is-invalid' or ''}">
+                            <select id="id_company_country" name="company_country_id" t-attf-class="form-control #{error.get('country_id') and 'is-invalid' or ''}" readonly='true'>
                                 <option value="">Country...</option>
                                 <t t-foreach="countries" t-as="c">
                                     <option t-att-value="c.id" t-att-selected="c.id == (country and country.id or -1)">
@@ -176,7 +176,7 @@
                         <div t-attf-class="form-group #{error.get('state_id') and 'o_has_error' or ''} col-lg-6 adress_company">
                             <label class="col-form-label" for="state_id">Estado</label>
                             <input id="input_company_state_id" type="hidden" t-att-value="'company_state_id' in checkout and checkout['company_state_id']" />
-                            <select id="select_company_state_id" name="state_id" t-attf-class="form-control #{error.get('state_id') and 'is-invalid' or ''}">
+                            <select id="select_company_state_id" name="state_id" t-attf-class="form-control #{error.get('state_id') and 'is-invalid' or ''}" readonly='true'>
                                 <option value="">Estado...</option>
                                 <t t-foreach="country and country.state_ids or []" t-as="s">
                                     <option t-att-value="s.id" t-att-selected="s.id == ('state_id' in checkout and country and checkout['state_id'] != '' and int(checkout['state_id']))">
@@ -187,7 +187,7 @@
                         </div>
                         <div t-attf-class="form-group #{error.get('city_id') and 'o_has_error' or ''} col-lg-6 adress_company">
                             <label class="col-form-label" for="city_id">Cidade</label>
-                            <input id="input_company_city_id" type="hidden" t-att-value="'city_id' in checkout and checkout['city_id']" />
+                            <input id="input_company_city_id" type="hidden" t-att-value="'city_id' in checkout and checkout['city_id']" readonly='true'/>
                             <select id="select_company_city_id" name="company_city_id" t-attf-class="form-control #{error.get('city_id') and 'is-invalid' or ''}">
                                 <option value="">Cidade...</option>
                             </select>

@@ -76,7 +76,6 @@ class L10nBrWebsiteSale(main.WebsiteSale):
         return errors, error_msg
 
     def values_postprocess(self, order, mode, values, errors, error_msg):
-        print(values)
         new_values, errors, error_msg = super(L10nBrWebsiteSale, self).\
             values_postprocess(order, mode, values, errors, error_msg)
         new_values['cnpj_cpf'] = values.get('cnpj_cpf', None)
@@ -93,25 +92,53 @@ class L10nBrWebsiteSale(main.WebsiteSale):
         new_values['number'] = values.get('number', None)
         new_values['street2'] = values.get('street2', None)
         new_values['district'] = values.get('district', None)
-        return new_values, errors, error_msg
+
+        company_values = {
+            'cnpj_cpf': values['company_cnpj_cpf'],
+            'name': values['company_name'],
+            'email': values['company_email'],
+            'phone': values['company_phone'],
+            'zip': values['company_zip'],
+            'street': values['company_street'],
+            'number': values['company_number'],
+            'district': values['company_district'],
+            'street2': values['company_street2'],
+            'country_id': values['company_country_id'],
+            'city_id': values['company_city_id'],
+            'is_company': True,
+        }
+
+        list_values = [new_values, company_values]
+
+        return list_values, errors, error_msg
 
     def _checkout_form_save(self, mode, checkout, all_values):
         Partner = request.env['res.partner']
-        if mode[0] == 'new':
-            partner_id = Partner.sudo().create(checkout)
-        elif mode[0] == 'edit':
-            partner_id = int(all_values.get('partner_id', 0))
-            if partner_id:
-                # double check
-                order = request.website.sale_get_order()
-                shippings = Partner.sudo().search(
-                    [("id", "child_of",
-                      order.partner_id.commercial_partner_id.ids)])
-                if partner_id not in shippings.mapped('id') and \
-                   partner_id != order.partner_id.id:
-                    return Forbidden()
-
-                Partner.browse(partner_id).sudo().write(checkout)
+        for rec in checkout:
+            if rec.get('is_company'):
+                partner = Partner.sudo().search([
+                    ('cnpj_cpf', '=', rec.get('cnpj_cpf'))
+                ])
+                partner_user_id = int(all_values.get('partner_id', 0))
+                if not partner and rec.get('cnpj_cpf'):
+                    rec.update({
+                        'child_ids': [(6, False, [partner_user_id])]
+                    })
+                    partner_id = Partner.sudo().create(rec)
+                else:
+                    partner.sudo().write({
+                        'child_ids': [(6, False, [partner_user_id])]
+                    })
+            else:
+                partner_id = int(all_values.get('partner_id', 0))
+                if partner_id:
+                    # double check
+                    order = request.website.sale_get_order()
+                    shippings = Partner.sudo().search(
+                        [("id", "child_of", order.partner_id.commercial_partner_id.ids)])
+                    if partner_id not in shippings.mapped('id') and partner_id != order.partner_id.id:
+                        return Forbidden()
+                    Partner.browse(partner_id).sudo().write(rec)
         return partner_id
 
     @http.route()
