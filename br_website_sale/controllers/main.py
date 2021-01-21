@@ -95,7 +95,7 @@ class L10nBrWebsiteSale(main.WebsiteSale):
 
         company_values = {
             'cnpj_cpf': values['company_cnpj_cpf'],
-            'name': values['company_name'],
+            'name': values['company_name'] if values['company_cnpj_cpf'] else '',
             'email': values['company_email'],
             'phone': values['company_phone'],
             'zip': values['company_zip'],

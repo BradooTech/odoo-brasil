@@ -110,7 +110,8 @@
                             <div class="form-check form-check-inline">
                                 <input type="radio" name="own_company" id="radioCompany" value="true" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Sim</div>
                             <div class="form-check form-check-inline">
-                                <input type="radio" name="own_company" id="radioCompany" value="false" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Não</div>
+                                <input type="radio" name="own_company" id="radioCompany" value="false" 
+                                t-att-value="true" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Não</div>
                         </div>
                         <!-- <div id="adress_company" style='width:100%;'> -->
                         <div t-attf-class="form-group #{error.get('cnpj_cpf') and 'o_has_error' or ''} col-lg-5 adress_company">
@@ -124,7 +125,7 @@
                         </div>
                         <div t-attf-class="form-group #{error.get('name') and 'o_has_error' or ''} col-lg-12 div_name adress_company">
                             <label class="col-form-label" for="name">Name</label>
-                            <input type="text" name="company_name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" t-att-value="'name' in checkout and checkout['name']" readonly='true'/>
+                            <input type="text" name="company_name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" readonly='true'/>
                             <div class="w-100"/>
                         </div>
                         <t t-if="mode[1] == 'billing'">
