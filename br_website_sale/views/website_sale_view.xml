@@ -27,7 +27,7 @@
                         </div> -->
                         <div class="w-100"/>
                         <div t-attf-class="form-group #{error.get('name') and 'o_has_error' or ''} col-lg-12 div_name">
-                            <label class="col-form-label" for="name">Name</label>
+                            <label class="col-form-label" for="name">Nome</label>
                             <input type="text" name="name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" t-att-value="'name' in checkout and checkout['name']" />
                             <div class="w-100"/>
                         </div>
@@ -78,7 +78,7 @@
                         <div t-attf-class="form-group #{error.get('country_id') and 'o_has_error' or ''} col-lg-6 div_country">
                             <label class="col-form-label" for="country_id">País</label>
                             <select id="id_country" name="country_id" t-attf-class="form-control #{error.get('country_id') and 'is-invalid' or ''}">
-                                <option value="">Country...</option>
+                                <option value="">País...</option>
                                 <t t-foreach="countries" t-as="c">
                                     <option t-att-value="c.id" t-att-selected="c.id == (country and country.id or -1)">
                                         <t t-esc="c.name"/>
@@ -110,8 +110,7 @@
                             <div class="form-check form-check-inline">
                                 <input type="radio" name="own_company" id="radioCompany" value="true" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Sim</div>
                             <div class="form-check form-check-inline">
-                                <input type="radio" name="own_company" id="radioCompany" value="false" 
-                                t-att-value="true" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Não</div>
+                                <input type="radio" name="own_company" id="radioCompany" value="false" t-attf-class="#{error.get('own_company') and 'is-invalid' or ''}"/>Não</div>
                         </div>
                         <!-- <div id="adress_company" style='width:100%;'> -->
                         <div t-attf-class="form-group #{error.get('cnpj_cpf') and 'o_has_error' or ''} col-lg-5 adress_company">
@@ -124,7 +123,7 @@
                             </a>
                         </div>
                         <div t-attf-class="form-group #{error.get('name') and 'o_has_error' or ''} col-lg-12 div_name adress_company">
-                            <label class="col-form-label" for="name">Name</label>
+                            <label class="col-form-label" for="name">Nome</label>
                             <input type="text" name="company_name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" readonly='true'/>
                             <div class="w-100"/>
                         </div>
@@ -166,7 +165,7 @@
                         <div t-attf-class="form-group #{error.get('country_id') and 'o_has_error' or ''} col-lg-6 div_country adress_company">
                             <label class="col-form-label" for="country_id">País</label>
                             <select id="id_company_country" name="company_country_id" t-attf-class="form-control #{error.get('country_id') and 'is-invalid' or ''}" readonly='true'>
-                                <option value="">Country...</option>
+                                <option value="">País...</option>
                                 <t t-foreach="countries" t-as="c">
                                     <option t-att-value="c.id" t-att-selected="c.id == (country and country.id or -1)">
                                         <t t-esc="c.name"/>
